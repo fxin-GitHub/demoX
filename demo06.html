@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo06</title>
+	<script type="text/javascript"  src="./phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	
+
+EnemyTank = function(index, game, player, _groupEnemyBullet){
+	this.game = game;
+	this.player = player;
+	this.groupEnemyBullet = _groupEnemyBullet;
+	this.alive = true;
+	this.health = 3;
+	this.distance;
+	this.nextFireTime = 0;
+
+	var x = game.world.randomX;
+	var y = game.world.randomY;
+	this.tank = game.add.sprite(x, y, "enemy", "tank1");
+	this.turret = game.add.sprite(x, y, "enemy", "turret");
+	this.shadow = game.add.sprite(x, y, "enemy", "shadow");
+	this.tank.index = index;
+
+	this.tank.anchor.set(0.5);
+	this.turret.anchor.set(0.3, 0.5);
+	this.shadow.anchor.set(0.5);
+
+	this.turret.rotation = game.rnd.between(0.1, 6.2);
+	this.tank.rotation = game.rnd.between(0.1, 6.2);
+	game.physics.enable(this.tank, Phaser.Physics.ARCADE);
+	game.physics.arcade.velocityFromRotation(this.tank.rotation, 100, this.tank.body.velocity);
+	this.tank.body.collideWorldBounds = true;
+	this.tank.body.bounce.set(1);
+
+	this.tank.bringToTop();
+	this.turret.bringToTop();
+}
+
+EnemyTank.prototype.damage = function(){
+	this.health -=1;
+	if(this.health <= 0){
+		this.alive = false;
+		this.tank.kill();
+		this.turret.kill();
+		this.shadow.kill();
+		console.log("enemy kiled!!!")
+		
+	}
+}
+
+EnemyTank.prototype.update = function(){
+	this.turret.x = this.tank.x;
+	this.turret.y = this.tank.y;
+	this.shadow.x = this.tank.x;
+	this.shadow.y = this.tank.y;
+	this.distance = game.physics.arcade.distanceBetween(this.tank, this.player);
+	if(this.distance <400){
+		this.turret.rotation = game.physics.arcade.angleBetween(this.turret, this.player);
+		if(this.distance <200){
+			this.enemyFire();
+		}
+	}
+}
+
+EnemyTank.prototype.enemyFire = function(){
+	if(this.game.time.now >this.nextFireTime){
+		var enemyBullet = this.groupEnemyBullet.getFirstDead();
+		if(enemyBullet){
+			enemyBullet.reset(this.turret.x, this.turret.y);
+			//enemyBullet.rotation = this.game.physics.arcade.angleBetween(enemyBullet, this.player);
+			//this.game.physics.arcade.velocityFromRotation(enemyBullet.rotation, 400, enemyBullet.body.velocity);
+			enemyBullet.rotation = this.game.physics.arcade.moveToObject(enemyBullet, this.player, 400);
+			this.nextFireTime = this.game.time.now +1500;
+			console.log("fire");
+		}
+	}
+}
+
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, "tanks", {preload:preload, create:create, update:update, render:render});
+
+function preload(){
+	game.load.atlas('tank', 'assets/games/tanks/tanks.png', 'assets/games/tanks/tanks.json');
+    game.load.atlas('enemy', 'assets/games/tanks/enemy-tanks.png', 'assets/games/tanks/tanks.json');
+    game.load.image('logo', 'assets/games/tanks/logo.png');
+    game.load.image('bullet', 'assets/games/tanks/bullet.png');
+    game.load.image('earth', 'assets/games/tanks/scorched_earth.png');
+    game.load.spritesheet('kaboom', 'assets/games/tanks/explosion.png', 64, 64, 23);
+}
+
+var earth;
+var arrayEnemyTank = [];
+var totalEnemy = 0;
+var groupEnemyBullet;
+var enemyNextFireTime = 0;
+var playerTank;
+var playerTurret;
+var playerShadow;
+var groupPlayerBullet;
+var playerNextFireTime = 0;
+var currentSpeed = 300;
+var cursors;
+
+
+function create(){
+	game.world.setBounds(0, 0, 1600, 1200);
+	earth = game.add.tileSprite(0, 0, 800, 600, "earth");
+	earth.fixedToCamera = true;
+
+	playerTank = game.add.sprite(0, 0, "tank", "tank1");
+	playerTank.anchor.set(0.5);
+	game.physics.arcade.enable(playerTank);
+	playerTank.body.collideWorldBounds = true;
+	game.camera.follow(playerTank);
+
+	playerTurret = game.add.sprite(0, 0, "tank", "turret");
+	playerTurret.anchor.set(0.3, 0.5);
+	//playerTurret.body.moves = false;
+	//playerTurret.body.immovable = true;
+
+	playerShadow = game.add.sprite(0, 0, "tank", "shadow");
+	playerShadow.anchor.set(0.4);
+
+	groupEnemyBullet = game.add.group();
+	groupEnemyBullet.enableBody = true;
+	groupEnemyBullet.createMultiple(20, "bullet", 0, false);
+	groupEnemyBullet.callAll("anchor.set","anchor", 0.5);
+	groupEnemyBullet.setAll("checkWorldBounds", true);
+	groupEnemyBullet.setAll("outOfBoundsKill", true);
+
+	groupPlayerBullet = game.add.group();
+	groupPlayerBullet.enableBody = true;
+	groupPlayerBullet.createMultiple(10, "bullet", 0, false);
+	groupPlayerBullet.callAll("anchor.set", "anchor", 0.5);
+	groupPlayerBullet.setAll("checkWorldBounds", true);
+	groupPlayerBullet.setAll("outOfBoundsKill", true);
+
+	playerTank.bringToTop();
+	playerTurret.bringToTop();
+
+	for(var i=0; i<10; i++){
+		arrayEnemyTank.push(new EnemyTank(i, game, playerTank, groupEnemyBullet));
+	}
+
+	cursors = game.input.keyboard.createCursorKeys();
+	game.input.onDown.add(playerFire, this);
+}
+
+function playerFire(){
+	if(game.time.now >playerNextFireTime){
+		var playerBullet = groupPlayerBullet.getFirstDead();
+		if(playerBullet){
+			playerBullet.reset(playerTank.x, playerTank.y);
+			playerBullet.rotation = game.physics.arcade.angleToPointer(playerBullet);
+			game.physics.arcade.velocityFromRotation(playerBullet.rotation, 400, playerBullet.body.velocity);
+		}
+	}
+}
+
+function update(){
+	earth.tilePosition.x = -game.camera.x;
+	earth.tilePosition.y = -game.camera.y;
+
+	totalEnemy =0;
+	for(var i=0; i<arrayEnemyTank.length; i++){
+		if(arrayEnemyTank[i].alive){
+			totalEnemy++;
+			arrayEnemyTank[i].update();
+			game.physics.arcade.overlap( groupPlayerBullet, arrayEnemyTank[i].tank, playerBulletHitEnemy, null, this);
+			game.physics.arcade.collide(playerTank, arrayEnemyTank[i].tank);
+		}
+	}
+
+	playerTurret.x = playerTank.x;
+	playerTurret.y = playerTank.y;
+	playerShadow.x = playerTank.x;
+	playerShadow.y = playerTank.y;
+	playerTurret.rotation = game.physics.arcade.angleToPointer(playerTurret);
+	if(currentSpeed >=0){
+		game.physics.arcade.velocityFromAngle(playerTank.angle, currentSpeed, playerTank.body.velocity);
+	}
+	if(cursors.up.isDown){
+		currentSpeed = 400;
+	}else{
+		if(currentSpeed >50){
+			currentSpeed -=5;	//未更新速度，速度大于100，缓冲刹车
+		}else{
+			currentSpeed = 0;	//未更新速度，速度降到100后，可以立即停止
+		}
+	}
+	if(cursors.left.isDown){
+		playerTank.angle -=4
+	}else if(cursors.right.isDown){
+		playerTank.angle +=4
+	}
+
+	game.physics.arcade.collide(playerTank, groupEnemyBullet, enemyBulletHitPlayer, null, this);
+	
+
+}
+
+function enemyBulletHitPlayer(_player, _enemyBullet){
+	_enemyBullet.kill();
+	//_player.kill();
+}
+
+function playerBulletHitEnemy(_enemy, _playerBullet){
+	_playerBullet.kill();
+	arrayEnemyTank[_enemy.index].damage();
+	console.log("player Bullet Hit Enemy");
+}
+
+function render(){
+	game.debug.text("cursors.up.isDown:"+cursors.up.isDown, 20, 20);
+	game.debug.text("cursors.left.isDown:"+cursors.left.isDown, 20, 40);
+	game.debug.text("cursors.right.isDown:"+cursors.right.isDown, 20, 60);
+	game.debug.text("totalEnemy:"+totalEnemy, 20, 80);
+
+}
+
+</script>
+</body>
+</html>
