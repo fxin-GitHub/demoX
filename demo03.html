@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./phaser.min.js"></script>
+</head>
+<body>
+<script>
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, "game", {preload: preload, create: create, update: update})
+    var background_1
+    var cursor
+    var munny
+    var animation_1
+    var bot
+    var greenJellyfish
+    var group
+    var group_seacreature
+    var frameNames
+    var seacreature
+    var crab
+    var text_1
+    var textFrame
+    var counter = 0
+    var counter1 = 0
+    var score
+    var orb_1
+    var group_orb
+    var bitmapData_1
+    var arrow
+    var text_arrow
+    var button_over
+    var group_button
+    var rotate_button
+    var click_count
+    var group_button_flixel
+    var fx
+    var speaker
+    var tween_speaker
+    var sounds
+    var group_soundButton
+    var SorP = "start/pause"
+    var keys
+
+
+    function preload() {
+        game.load.image('undersea', 'assets/pics/undersea.jpg');
+        game.load.image("background", "assets/pig.jpg" )
+        game.load.spritesheet("munny", "assets/sprites/metalslug_mummy37x45.png", 37, 45, 18);
+        game.load.atlas('seacreatures', 'assets/sprites/seacreatures_json.png', 'assets/sprites/seacreatures_json.json');
+        game.load.atlasJSONHash('bot', 'assets/sprites/running_bot.png', 'assets/sprites/running_bot.json');
+        game.load.image('orb', 'assets/sprites/orb-blue.png');
+        game.load.image('arrow', 'assets/sprites/longarrow-white.png');
+        game.load.spritesheet('key_button_over', 'assets/buttons/button_sprite_sheet.png', 193, 71);
+        game.load.spritesheet('button_flixel', 'assets/buttons/flixel-button.png', 80, 20);
+        game.load.bitmapFont('nokia', 'assets/fonts/bitmapFonts/nokia16black.png', 'assets/fonts/bitmapFonts/nokia16black.xml');
+        game.load.audio('sfx', [ 'assets/audio/SoundEffects/magical_horror_audiosprite.mp3', 'assets/audio/SoundEffects/magical_horror_audiosprite.ogg' ]);
+        game.load.image('key_speakers','assets/sprites/speakers.png');
+        game.load.audio('key_percussion', 'assets/audio/tech/percussion.mp3');
+        game.load.audio('key_explosion', 'assets/audio/SoundEffects/explosion.mp3');
+        game.load.audio('key_sword', 'assets/audio/SoundEffects/sword.mp3');
+        game.load.audio('key_blaster', 'assets/audio/SoundEffects/blaster.mp3');
+    }
+
+    function create() {
+        createInit()
+        createPig()
+        createMunny()
+        createGreenJellyFish()
+        createBots()
+        createBitmapData()
+        createGroupSeacreature()
+        createCircle()
+        createButton()
+        createFx()
+    }
+
+    function createInit(){
+        game.world.setBounds(0, 0, 1200, 800)
+        game.physics.startSystem(Phaser.Physics.ARCADE)
+        cursor = game.input.keyboard.createCursorKeys()
+        game.input.onDown.add(move_crab, this)
+        game.input.onUp.add(changeMunny, this)
+        text_1 = game.add.text(20, 20, "animation loop * ")
+        score = game.add.text(20, 80, "score: ")
+        textFrame = game.add.text(20,100, "frame index: ")
+        text_arrow = game.add.text(500, 40, "", {font:"0xff0000"})
+    }
+
+    function createPig(){
+        background_1= game.add.tileSprite(0, 0, 1200, 800, "background")
+        background_1.scale.set(1, 1)
+        background_1.smoothed = false
+    }
+
+    function createGreenJellyFish(){
+        greenJellyfish = game.add.sprite(330, 100, 'seacreatures', 'greenJellyfish0000');
+        greenJellyfish.anchor.set(0.5, 0.5)
+        game.physics.arcade.enable(greenJellyfish)
+        crab = game.add.sprite(game.world.randomX, game.world.randomY, "seacreatures")
+        crab.anchor.set(0.5)
+        crab.animations.add("swin", Phaser.Animation.generateFrameNames("crab1", 0, 24, "", 4), 20, true)
+        crab.animations.play("swin")
+        game.camera.follow(crab)
+        
+    }
+
+   
+    function createMunny(){
+        munny = game.add.sprite(0, 500, "munny", 5)
+        munny.scale.set(2)
+        munny.smoothed =true
+        game.physics.arcade.enable(munny)
+        munny.body.bounce.y = 0.5
+        munny.body.bounce.x = 0.8
+        munny.body.collideWorldBounds = true
+        munny.body.gravity.y = 0.1
+        animation_1 = munny.animations.add("run")
+        animation_1.enableUpdate = true
+        animation_1.onUpdate.add(onUpdateFrameText, this)
+        animation_1.onStart.add(animationStart, this)
+        animation_1.onLoop.add(animationloop, this)
+        animation_1.onComplete.add(animationComplete, this)
+        animation_1.play(10, true, false)
+    }
+
+    function createBots(){
+        group = game.add.group()
+        group.enableBody = true
+        game.time.events.loop(100, callbackCreateBots, this)
+    }
+
+    function createBitmapData(){
+        group_orb = game.add.group()
+        orb_1 = game.make.sprite(0, 0, "orb")
+        bitmapData_1 = game.add.bitmapData(22*25, 22, "key_bitmapData", true)
+        for(var i=0; i<22; i++){
+            bitmapData_1.draw(orb_1, 23*i, 0)
+        }
+        game.cache.addSpriteSheet("key_spritesheet", '', bitmapData_1.canvas, 22, 22, 22, 0, 0)
+        for(var i=0; i<10; i++){
+           var sprite_1 = group_orb.create(i*22, 0, "key_spritesheet")
+           //var sprite_1 = game.add.sprite(i*22, 0, "key_spritesheet")
+            sprite_1.animations.add("run")
+            sprite_1.play("run", 200, true)
+        }
+        group_orb.fixedToCamera = true
+        group_orb.cameraOffset.setTo(0, 0)
+    }
+
+    function createGroupSeacreature(){
+        group_seacreature = game.add.group()
+        group_seacreature.enableBody = true
+
+        for(var i=0; i<3; i++){
+            seacreature = group_seacreature.create(game.world.randomX, game.world.randomY, "seacreatures")
+            seacreature.body.gravity.y = -1.2
+            seacreature.body.bounce.set(1.2)
+            seacreature.body.collideWorldBounds = true
+        }
+        frameNames = Phaser.Animation.generateFrameNames("octopus", 0, 24, '', 4)
+        group_seacreature.callAll("animations.add", "animations", "run", frameNames, 20, true, false)
+        group_seacreature.callAll("play", null, "run")
+    }
+
+    function createCircle(){
+        var circle
+        var circleLabel
+        var graphics
+        var circumferencePointInfo = null
+        var label
+
+        circle = new Phaser.Circle(600, 100, 100)
+        circleLabel = new Phaser.Circle(600, 100, 150)
+        graphics = game.add.graphics(0, 0)
+        graphics.lineStyle(2, "#00ffff", 1)
+        graphics.drawCircle(circle.x, circle.y, circle.diameter)
+        
+        for(var d=0; d<360; d+=22.5){
+            var point = circle.circumferencePoint(d, true)
+            graphics.moveTo(circle.x, circle.y)
+            graphics.lineTo(point.x, point.y)
+            var LPoint = circleLabel.circumferencePoint(d, true)
+            var radians = String(Phaser.Math.degToRad(d)).substr(0, 5)
+            circumferencePointInfo = d+"\n"+radians
+            label = game.add.text(LPoint.x, LPoint.y, d, {font:"10px"})
+            label.centerX = LPoint.x
+            label.certerY = LPoint.Y
+        }
+        arrow = game.add.sprite(circle.x, circle.y, "arrow")
+        arrow.anchor.set(0, 0.5)
+        arrow.scale.set(0.7, 0.3)
+        arrow.tint = 0xff0000
+    }
+    
+    function createButton(){
+        rotate_button = false
+        click_count = 0
+        group_button = game.add.group()
+        button_over = game.add.button(100, 130, "key_button_over", callback_button, this, 2, 1, 0)
+        button_over.anchor.set(0.5, 0.5)
+        button_over.scale.set(0.5)
+        button_over.onInputOver.add(func_button_over, this)
+        group_button.add(button_over)
+    }
+
+    function createFx(){
+        group_soundButton = game.add.group()
+        fx = game.add.audio("sfx")
+        fx.allowMultiple = false
+        speaker = game.add.image(720, 640, "key_speakers")
+        speaker.anchor.set(0.5, 1)
+        speaker.scale.set(0.5)
+
+        fx.addMarker('charm', 0, 2.7);
+        fx.addMarker('curse', 4, 2.9);
+        fx.addMarker('fireball', 8, 5.2);
+        fx.addMarker('spell', 14, 4.7);
+        fx.addMarker('soundscape', 20, 18.8);
+
+        group_soundButton.fixedToCamera = true
+        group_soundButton.cameraOffset.setTo(0, 0)
+        addSoundButton("charm", 30, 400)
+        addSoundButton("curse", 30, 430)
+        addSoundButton("fireball", 30, 460)
+        addSoundButton("spell", 30, 490)
+        addSoundButton("soundscape", 30, 520)
+        addSoundButton(SorP, 30, 550)
+
+        var percussion = game.add.audio("key_percussion")
+        var explosion = game.add.audio("key_explosion")
+        var sword = game.add.audio("key_sword")
+        var blaster = game.add.audio("key_blaster")
+        percussion.allowMultiple = false
+        explosion.allowMultiple = false
+        sword.allowMultiple = false
+        blaster.allowMultiple = false
+        sounds = [explosion, sword, blaster, percussion]
+        game.sound.setDecodedCallback(sounds, callback_sounds, this)
+    }
+
+    function animationStart(sprite, animation) {
+        game.add.text(20, 20+32, "animation start")
+    }
+
+    function animationloop(sprite, animation) {
+        text_1.text = "animation loop * "+animation.loopCount
+    }
+
+    function animationComplete(sprite, animation) {
+        game.add.text(20, 32*2+20, "animation complete")
+    }
+
+    function changeMunny(){
+        if(munny.key == "munny"){
+            munny.loadTexture("bot", 0, false)
+            munny.animations.add("run")
+            munny.animations.play("run", 22, true, false)
+        }
+        else{
+            munny.loadTexture("munny", 0 ,true)
+            munny.animations.add("run")
+            munny.animations.play("run", 35, true,false)
+        }
+    }
+
+    function move_crab(pointer){
+        /*
+        var difX = Math.abs(crab.x - pointer.x)
+        var difY = Math.abs(crab.Y - pointer.Y)
+        if(difX*difX + difY*difY >50){
+            */
+            game.add.tween(crab).to({x:pointer.x, y:pointer.y}, 1200, Phaser.Easing.Quadratic.InOut, true, 0, 0, false)
+        
+    }
+
+    function callbackCreateBots(){
+        var botChild = group.create(0, 650 , "bot")
+        botChild.animations.add("run")
+        botChild.animations.play("run", 10, true, false)
+    }
+
+    function callback_button(){
+        rotate_button = !rotate_button
+        click_count++
+        if(click_count == 5){
+            click_count = 0
+            background_1.visible = true
+            game.world.remove(group_button)
+        }
+    }
+
+    function func_button_over(){
+        background_1.visible = !background_1.visible
+    }
+
+    function addSoundButton(buttonName, x, y){
+        var soundButton = game.add.button(x, y, "button_flixel", callback_button_flixel, this, 2, 1, 0)
+        soundButton.name = buttonName
+        soundButton.scale.set(1.4, 1.2)
+        var style = {font: "15px", fill:"#ff0000", align:"center"}
+        var buttonText = game.add.text(soundButton.centerX, soundButton.centerY, buttonName, style)
+        buttonText.anchor.set(0.5)
+        group_soundButton.add(soundButton)
+        group_soundButton.add(buttonText)
+    }
+
+    function callback_button_flixel(button){
+        if(button.name == SorP){
+            if(fx.isPlaying){
+                fx.pause()
+                if(tween_speaker != null){
+                    tween_speaker.pause()
+                }
+            }else{
+                fx.resume()
+                if(tween_speaker != null){
+                    tween_speaker.resume()
+                }
+            }
+        }else{
+            fx.play(button.name)
+            tween_speaker = game.add.tween(speaker.scale)
+            if(!tween_speaker.isPlaying){
+                tween_speaker.to({x:0.65, y:0.55}, 330, "Sine.easeInOut", true, 0, 1000, true)    //Phaser.Easing.Quadratic.InOut,
+            }
+            fx.onStop.add(fxOnStop, this)
+        }
+    }
+
+    function callback_sounds(){
+        //percussion.loopFull(2)
+        keys = game.input.keyboard.addKeys({explosion: Phaser.Keyboard.ONE, sword: Phaser.Keyboard.TWO, blaster: Phaser.Keyboard.THREE, percussion: Phaser.Keyboard.W})
+        keys.explosion.onDown.add(playSound, this)
+        keys.sword.onDown.add(playSound, this)
+        keys.blaster.onDown.add(playSound, this)
+        keys.percussion.onDown.add(playSound ,this)
+    }
+
+    function fxOnStop(){
+        tween_speaker.pause()
+        //background_1.visible = false
+    }
+
+    function playSound(whichKey){
+        switch(whichKey.keyCode){
+            case Phaser.Keyboard.ONE:
+                sounds[0].play()
+                break
+            case Phaser.Keyboard.TWO:
+                sounds[1].play()
+                break
+            case Phaser.Keyboard.THREE:
+                sounds[2].play()
+                break
+            case Phaser.Keyboard.W:
+                sounds[3].play()
+                break
+        }
+    }
+
+    function update() {
+        updatePig()
+        updateGreenJellyFish()
+        updateArrow()
+        if(rotate_button){
+            updateButton()
+        }
+        group.setAll("x", 12, true, true, 1)
+        group.forEach(checkBot, this, true)
+        game.physics.arcade.collide(greenJellyfish, munny)
+        game.physics.arcade.collide(group_seacreature, greenJellyfish)
+        game.physics.arcade.overlap(greenJellyfish, group, callbackOverlap, null, this)
+    }
+
+    function updatePig(){
+        if(animation_1.isPlaying){
+            munny.x +=0.2
+            background_1.tilePosition.x -=1
+        }
+    }
+
+    function updateGreenJellyFish(){
+        if(game.physics.arcade.distanceToPointer(greenJellyfish, game.input.activePointer)>5){
+            game.physics.arcade.moveToPointer(greenJellyfish, 180)
+        }else{
+            greenJellyfish.body.velocity.set(0)
+        }
+        if(cursor.up.isDown){
+            crab.y -=8
+        }
+         if(cursor.down.isDown){
+            crab.y +=8
+        }
+         if(cursor.right.isDown){
+            crab.x +=8
+        }
+         if(cursor.left.isDown){
+            crab.x -=8
+        }
+        game.world.wrap(crab)
+    }
+
+    function updateArrow(){
+        arrow.angle += 0.2
+        text_arrow.text = "arrow.angle.toFixed(2) + arrow.rotation.toFixed(2)"
+    }
+
+    function updateButton(){
+        button_over.angle += 1
+    }
+    //没起作用
+    function onUpdateFrameText(anim, frame){
+        textFrame.text = "frame index: "+frame.index
+    }
+
+    function checkBot(bot){
+        try{
+            if(bot.x > game.width){
+                group.remove(bot, true, false)
+                counter++
+                score.text = "score: "+counter
+            }
+        }catch(e){
+             console.log(bot);
+        }
+    }
+
+    function callbackOverlap(greenJellyfish, bot){
+        bot.kill()
+        counter1++;
+        if(counter1 ==50){
+            greenJellyfish.scale.set(2.5)
+        }else if(counter1 == 100){
+            greenJellyfish.scale.set(0.8)
+        }else if(counter1 >= 150){
+            counter1 == 0
+            greenJellyfish.scale.set(1)
+        }
+    }
+
+    function render(){
+        game.debug.body(munny)
+        //renderArrow()
+    }
+
+    function renderArrow(){
+        game.debug.text("angle:"+arrow.angle.toFixed(2), 200, 200, {font:"0xff0000"})
+        game.debug.text("rotation:"+arrow.rotation.toFixed(2), 200, 220)
+    }
+</script>
+</body>
+</html>

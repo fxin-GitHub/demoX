@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo1</title>
+	<script type="text/javascript" src="phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, "demo1", {preload:preload, create:create, update:update, render:render});
+
+	function preload(){
+		game.load.image("key_undersea", "assets/particlestorm/undersea.jpg");
+		game.load.image("key_ground", "assets/tests/ground.png");
+		game.load.image("key_bullet", "assets/bullets/bullet279.png");
+		game.load.image("key_shocktroopers_toy", "assets/pics/shocktroopers_toy.png");
+		game.load.image("key_tree", "assets/tests/tree.png");
+		game.load.image("key_spyro", "assets/pics/spyro.png");
+	}
+
+	var undersea;
+	var ground;
+	var group_bullet;
+	var bullet;
+	var trooper;
+	var group_tree;
+	var group_spyro;
+	var group_arrow;
+	var flag_down = false;
+	var flag_hold = true;
+	var speed = 500;
+	var keys;
+	var flag_miss = false;
+	var weapon1;
+	var distance = 800;
+	var groupX = 700;
+
+	function create(){
+		game.world.setBounds(0, 0, 800*5, 600);
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+		//game.physics.arcade.setBoundsToWorld(true, true, false, false, false);
+		//game.physics.arcade.gravity.y = 100;
+		//game.physics.arcade.checkCollision.down = false;
+
+		undersea = game.add.tileSprite(0, 0, 800, 600, "key_undersea");
+		undersea.fixedToCamera = true;
+
+		
+		ground = game.add.sprite(0, game.world.height-32*2,  "key_ground");
+		ground.scale.set(10, 2);
+		//ground = game.add.tileSprite(0, 400, 800, 100,  "key_ground");
+		game.physics.arcade.enable(ground);
+		//ground.alignIn(game.world, Phaser.CERTER_BOTTOM);
+		//ground.body.gravity.y = 100;
+		//ground.body.collideWorldBounds = true;
+		ground.body.setSize(ground.width, ground.height-10, 0, 10);
+		ground.body.immovable = true;
+		ground.fixedToCamera = true;
+		//ground.cameraOffset(0, 0);
+		
+	
+		group_tree = game.add.group();
+		group_tree.enableBody = true;
+		group_tree.createMultiple(5, "key_tree", 0, true);
+		//group_tree.alignIn(ground, Phaser.BOTTOM);
+		group_tree.align(5, -1, distance);
+		group_tree.setAll("body.gravity.y", 300);
+		group_tree.callAll("anchor.set", "anchor", 0.5);
+		group_tree.callAll("scale.set", "scale", 1.5);
+		group_tree.position.set(groupX, game.world.height-ground.height-group_tree.getAt(0).height/1.5-10);
+		
+		group_spyro = game.add.group();
+		group_spyro.enableBody = true;
+		group_spyro.createMultiple(5, "key_spyro", 0, true);
+		group_spyro.align(5, -1, distance);
+		group_spyro.setAll("body.gravity.y", 300);
+		group_spyro.callAll("anchor.set", "anchor", 0.5);
+		group_spyro.callAll("scale.set", "scale", 0.5);
+		group_spyro.position.set(groupX, game.world.height-ground.height-group_tree.getAt(0).height-group_spyro.getAt(0).height/0.5-30);
+
+		
+		/*
+		weapon1= game.add.weapon(1, "key_bullet");
+		weapon1.bulletRate = 1;
+		weapon1.bulletSpeed = 500;
+		weapon1.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
+		weapon1.bulletLifespan = 3000;
+		weapon1.trackSprite(group_spyro.getAt(0));
+		*/
+
+		trooper = game.add.sprite(400, 400, "key_shocktroopers_toy");
+		trooper.anchor.set(0.5);
+		trooper.scale.set(0.3);
+		game.physics.arcade.enable(trooper);
+		trooper.body.gravity.y = 300;
+		trooper.body.collideWorldBounds = true;
+
+
+		game.camera.follow(trooper);
+
+
+
+		bullet = game.add.sprite(0,0, "key_bullet");
+		//bullet.angle = -30;
+		bullet.anchor.set(0, 0.5);
+		bullet.scale.set(2, 0.2);
+		bullet.tint = 0xff0000;
+		game.physics.arcade.enable(bullet);
+		bullet.body.gravity.y = 300;
+		//bullet.body.collideWorldBounds = true;
+		//bullet.checkWorldBounds = true;
+		//bullet.events.onOutOfBounds.add(outOfBounds, this);
+
+		//trooper.addchildren(bullet);
+
+		group_arrow = game.add.group();
+		group_arrow.enableBody = true;
+		group_arrow.createMultiple(5, "key_bullet", 0, true);
+		group_arrow.align(5, -1, distance);
+		group_arrow.setAll("body.gravity.y", 300);
+		//group_arrow.setAll("body.moves", false);
+		group_arrow.setAll("body.allowGravity", true);
+		group_arrow.setAll("tint", 0xff0000);
+		group_arrow.callAll("anchor.set", "anchor", 0.5);
+		group_arrow.callAll("scale.set", "scale", 2, 0.2);
+		group_arrow.setAll("rotation", game.physics.arcade.angleToPointer(trooper));
+		//group_spyro.callAll("body.setSize", "body", group_arrow.getAt(0).width, group_arrow.getAt(0).height+20, 0, 0);
+		group_arrow.position.set(groupX, game.world.height-ground.height-group_tree.getAt(0).height-group_spyro.getAt(0).height/0.5-group_arrow.getAt(0).height/0.2-100);
+
+		game.input.onDown.add(eventOnDown, this);
+		game.input.onUp.add(eventOnUp, this);
+		keys = game.input.keyboard.addKeys({addAngle:Phaser.Keyboard.ONE});
+		keys.addAngle.onDown.add(eventAddAngle, this);
+
+	}
+
+	function eventOnDown(){							
+		flag_down = true;
+	}
+
+	function eventOnUp(){
+		if(flag_down){
+			flag_down = false;
+			if(flag_hold){
+				flag_hold = false;
+				bullet.lifespan = 6000;
+				bullet.body.allowGravity = true;
+				//bullet.body.velocity.set(speed*Math.cos(bullet.angle), speed*Math.sin(bullet.angle));
+				game.physics.arcade.velocityFromAngle(bullet.angle, 600, bullet.body.velocity);
+			}
+		}
+	}
+
+	function outOfBounds(){
+		bullet.kill();
+		/*
+		bullet = game.world.getFirstDead();
+		if(bullet){
+			bullet.reset(trooper.x, trooper.y);
+			flag_hold = true;
+		}
+		*/
+	}
+
+	function eventAddAngle(){
+		bullet.angle -=10;
+	}
+
+	function eventMiss(){
+		if(flag_hold == false){
+			flag_miss = true;
+			bullet.kill();
+			console.log("miss");
+			var arrow = group_arrow.getFirstAlive();
+			if(arrow){
+				//game.physics.arcade.moveToPointer(group_arrow.getFirstAlive(), 500, trooper, 200);
+				arrow.body.moves = true;
+				arrow.body.allowGravity = true;
+				//group_arrow.setAll("body.moves", true);
+				//arrow.rotation = game.physics.arcade.angleBetween(arrow, trooper);
+				game.physics.arcade.velocityFromAngle(150, 800, arrow.body.velocity);
+				console.log("missed, arrow angle: "+arrow.angle);
+			}
+		}
+	}
+
+	function eventKillSpyro(_bullet, _spyro){
+		//group_spyro.getFirstAlive().kill();
+		//flag_hold =true;
+		group_arrow.setAll("body.allowGravity", true);
+		_spyro.kill();
+		_bullet.kill();
+		reviveBullet();
+		//trooper.body.moveTo(500, 0);
+		//_bullet.body.drag = 50;
+		//game.physics.arcade.moveToPointer(trooper, 500)
+		trooper.body.velocity.x = 800;
+		game.time.events.add(1000, stopMove, this);
+		
+	}
+
+	function stopMove(){
+		trooper.body.velocity.x = 0;
+		//game.camera.position.set(0, 0);
+	}
+
+	function eventFixTree(){
+		group_tree.setAll("body.moves", false);
+	}
+
+	function eventFixSpyro(){
+		group_spyro.setAll("body.moves", false);
+	}
+
+	function eventFixArrow(){
+		//group_arrow.setAll("body.moves", false);
+		//console.log("event arrow moves "+group_arrow.getAt(0).body.moves);
+		group_arrow.setAll("body.allowGravity", false);
+	}
+
+	function reviveBullet(){
+		bullet = game.world.getFirstDead();
+		if(bullet){
+			bullet.reset(trooper.x, trooper.y);
+			bullet.angle = 0;
+			bullet.body.moves = false;
+			bullet.body.allowGravity = false;
+			bullet.lifespan = 1000*600;
+			flag_hold = true;
+			flag_miss = false;
+			//group_arrow.setAll("body.moves", false);
+			group_arrow.setAll("body.allowGravity", false, true);
+		}
+	}
+
+	function resetBullet(_bullet){
+		if(_bullet){
+			_bullet.reset(trooper.x, trooper.y);
+			_bullet.angle = 0;
+			bullet.body.moves = false;
+			bullet.lifespan = 60000;
+			flag_hold = true;
+			flag_miss = false;
+			//group_arrow.setAll("body.moves", false);
+			group_arrow.setAll("body.allowGravity", false, true);
+		}
+	}
+
+	function eventKillTrooper(_trooper, _arrow){
+		if(flag_miss){
+			_trooper.kill();
+			flag_miss = false;
+		}else{
+			console.log("kill trooper error for flag_miss: "+flag_miss)
+		}
+	}
+
+	function eventKillArrow(_ground, _arrow){
+		if(flag_miss){
+			_arrow.kill();
+			reviveBullet();
+			flag_miss = false;
+		}else{
+			console.log("kill arrow error for flag_miss: "+flag_miss)
+		}
+	}
+
+	function eventFixedToCamera(){
+		//trooper.fixedToCamera = true;
+	}
+
+	function update(){
+		/*
+		for(var i=0; i<5; i++){
+			game.physics.arcade.moveToPointer(group_arrow.getAt(i), 500, {x:200, y:200});
+		}
+		*/
+		//undersea.tilePosition.x -= 0.2;
+		game.physics.arcade.collide(ground, trooper, eventFixedToCamera, null, this);
+		game.physics.arcade.collide(ground, group_tree, eventFixTree, null, this);
+		game.physics.arcade.collide(group_tree, group_spyro, eventFixSpyro, null, this);
+		game.physics.arcade.collide(group_spyro, group_arrow, eventFixArrow, null, this);
+		if(flag_hold){
+			bullet.x = trooper.x-10;
+			bullet.y = trooper.y;
+			bullet.body.moves = false;
+			if(flag_down){
+				bullet.rotation -=0.01;
+			}
+		}else{
+			bullet.body.moves = true;
+			bullet.rotation +=0.01;
+			game.physics.arcade.collide(bullet, group_spyro, eventKillSpyro, null, this);
+			game.physics.arcade.collide(ground, bullet, eventMiss, null, this);
+		}
+		
+		/*
+		if(bullet.alive == false){
+			bullet = game.world.getFirstDead();
+			if(bullet){
+				bullet.reset(trooper.x, trooper.y);
+				bullet.angle = 0;
+				flag_hold = true;
+			}
+		}
+		*/
+		if(flag_miss){
+			//weapon1.fireAngle = game.physics.arcade.angleBetween(group_spyro.getFirstAlive(), trooper);
+			//weapon1.fire();
+			group_arrow.setAll("body.allowGravity", true);
+			game.physics.arcade.collide(trooper, group_arrow, eventKillTrooper, null, this);
+			game.physics.arcade.collide(ground, group_arrow, eventKillArrow, null, this);
+		}
+	}
+
+	function render(){
+		game.debug.text("flag_down:"+flag_down, 20, 20);
+		game.debug.text("flag_hold:"+flag_hold, 20, 40);
+		game.debug.text("flag_miss:"+flag_miss, 20, 60);
+		game.debug.body(trooper);
+		game.debug.body(group_tree.getFirstAlive());
+		game.debug.body(group_spyro.getFirstAlive());
+		game.debug.body(group_arrow.getFirstAlive());
+	}
+
+</script>
+</body>
+</html>
