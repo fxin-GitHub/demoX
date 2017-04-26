@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo 04</title>
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, "parent", {preload: preload, create: create, update: update, render: render});
+
+	function preload(){
+		game.load.image('key_backdrop', 'assets/pics/remember-me.jpg');
+		game.load.image('key_ball', 'assets/sprites/yellow_ball.png');
+		game.load.image('key_bubble', 'assets/particles/bubble256.png');
+		game.load.spritesheet('key_phaser', 'assets/tests/tween/phaser.png', 70, 90);
+		game.load.spritesheet('shadow', 'assets/tests/tween/shadow.png', 138, 15);
+		game.load.atlas('seacreatures', 'assets/sprites/seacreatures_json.png', 'assets/sprites/seacreatures_json.json');
+		game.load.spritesheet('key_coin', 'assets/sprites/coin.png', 32, 32);
+		game.load.spritesheet('key_diamonds', 'assets/sprites/diamonds32x24x5.png', 32, 24);
+	}
+
+	var backdrop;
+	var text_alpha;
+	var text_alpha_loop_counter = 0;
+	var ball;
+	var ball3;
+	var tween_ball_1;
+	var tween_ball_2;
+	var tween_ball_3;
+	var margin;
+	var tween_earthquake;
+	var loopCounter =0;
+	var repeatCounter =0;
+	var addCounter = 0;
+	var timerCounter = 0;
+	var timer;
+	var timeEvents = []; 
+	var timeEventCounter = [0, 0, 0];
+	var timeEventText = [];
+	var event_i;
+	var keys;
+	var group_seacreature;
+	var group_seacreature_2;
+	var group_coin;
+	var group_diamond;
+	
+
+	function create(){
+		createInit();
+		creatTween();
+		createTimer();
+		createGroup();
+	}
+
+	function createInit(){
+		backdrop = game.add.tileSprite(0, 0, 800, 600, "key_backdrop");
+		keys = game.input.keyboard.addKeys({keyboard_top:Phaser.Keyboard.ONE, keyboard_remove:Phaser.Keyboard.TWO, keyboard_removeBetween:Phaser.Keyboard.THREE});
+	}
+
+	function creatTween(){
+		createTextAlpha();
+		createBounce();
+		createBubble();
+		//createEarthquakeInit();
+		createPhaser();
+
+	}
+
+	function createTextAlpha(){
+		var style = {font: "16px", fill: "#ffffff", align: "center"};
+		game.add.text(550, 10, "text_alpha", style);
+		text_alpha = game.add.text(650, 10, "text_alpha", style);
+		var tween_text_alpha = game.add.tween(text_alpha).to({alpha: 0}, 2000, "Linear", true, 0, -1, true);
+		tween_text_alpha.onStart.add(tweenTextAlphaOnStart, this);
+		tween_text_alpha.onComplete.add(tweenTextAlphaOnComplete, this);
+		tween_text_alpha.onLoop.add(tweenTextAlphaOnLoop, this);
+	}
+
+	function tweenTextAlphaOnStart(){
+		text_alpha.text = "onStart";
+	}
+
+	function tweenTextAlphaOnComplete(){
+		text_alpha.text = "onComplete";
+	}
+
+	function tweenTextAlphaOnLoop(){
+		text_alpha_loop_counter++;
+		text_alpha.text = "onLoop: "+text_alpha_loop_counter;
+	}
+
+	function createBounce(){
+		createBall1();
+		createBall3();
+	}
+
+	function createBall1(){
+		ball = game.add.sprite(game.world.width-20, 0, "key_ball");
+		tweenBall1();
+		//game.time.events.loop(1000*3, tweenBall1, this);
+	}
+	function tweenBall1(){
+		ball.position.set(game.rnd.between(700, 780), 0);
+		tween_ball_1 = game.add.tween(ball);
+		tween_ball_1.to({ y: game.world.height-ball.height}, game.rnd.between(1000, 5000), Phaser.Easing.Bounce.Out, true);
+		tween_ball_1.onComplete.add(tweenBall1, this);
+	}
+
+
+	function createBall3(){
+		ball3 = game.add.sprite(0, game.world.height-20, "key_ball");
+		tweenBall3();
+	}
+	function tweenBall3(){
+		tween_ball_3 = game.add.tween(ball3);
+		tween_ball_3.to({x: game.world.randomX}, game.rnd.between(1000, 5000), Phaser.Easing.Bounce.InOut, true);
+		tween_ball_3.onComplete.add(tweenBall3, this);
+	}
+
+	function tweenInterpolation(){
+		tween_ball_3.interpolation(Phaser.Math.bezierInterpolation);
+	}
+
+
+	function createBubble(){
+		var group_bubble = game.add.group();
+		for(var i=0; i<12; i++){
+			var bubble = group_bubble.create(game.world.randomX, 800, "key_bubble");
+			bubble.scale.set(game.rnd.realInRange(0.1, 0.5));
+			var tween_bubble = game.add.tween(bubble).to({y: -100}, game.rnd.between(2000, 10000), Phaser.Easing.Sinusoidal.InOut, true, 400, -1, false);
+		}
+	}
+
+	function createEarthquakeInit(){
+		margin = 10;
+		var x = -margin;
+		var y = -margin;
+		var w = game.world.width+2*margin;
+		var h = game.world.height+2*margin;
+		game.world.setBounds(x, y, w, h);
+		game.world.camera.position.set(0);
+		createEarthquake();
+	}
+
+	function createEarthquake(){
+		tween_earthquake = game.add.tween(game.camera).to({y:game.camera.y+10}, 100, Phaser.Easing.Bounce.InOut, true, 1000, 2, true);
+		tween_earthquake.onComplete.add(createEarthquake, this);
+	}
+
+	function createPhaser(){
+		var word;
+		var shadow;
+		for(var i=0; i<6; i++){
+			word = game.add.sprite(20+ i*35, -100, "key_phaser", i);
+			word.scale.set(0.5);
+			word.anchor.set(0.5);
+			game.add.tween(word).to({y: 50}, 3000, Phaser.Easing.Bounce.Out, true, 1000+500*i, -1, false);
+			if(i == 5){
+				game.add.tween(word).to({angle: 360}, 3000, "Linear", true, 1000+500*i, -1, false);
+			}
+			shadow = game.add.sprite(20+ i*35, 50+word.height/2, "shadow");
+			shadow.scale.set(0);
+			shadow.anchor.set(0.5);
+			shadow.tint = 0xff0000 ;
+			game.add.tween(shadow.scale).to({x: 0.5, y: 0.5}, 3000, "Linear", true, 1000+500*i, -1, false);
+		}	
+	}
+
+	function createTimer(){
+		game.time.events.loop(1000*1, timerEventsLoop, this);
+		game.time.events.repeat(1000*2, 10, timerEventsRepeat, this);
+		game.time.events.add(1000*3, timerEventsAdd, this);
+		createMyTimer();
+		createRemoveTimeEvents();
+	}
+
+	function timerEventsLoop(){
+		loopCounter++;
+	}
+
+	function timerEventsRepeat(){
+		repeatCounter++;
+	}
+
+	function timerEventsAdd(){
+		addCounter++;
+	}
+
+	function createMyTimer(){
+		timer = game.time.create(false);//autodestroy
+		timer.loop(1000*1, timerLoop, this);
+		timer.start();
+	}
+
+	function timerLoop(){
+		timerCounter++;
+	}
+
+	function createRemoveTimeEvents(){
+		group_timeEventText = game.add.group();
+		for(event_i=0; event_i<3; event_i++){	
+			timeEvents[event_i] = game.time.events.loop(500+game.rnd.between(0, 500), startTimeEvents, this, event_i);
+			timeEventText[event_i] = game.add.text(10, 200+event_i*20, "", {font:"16px", fill:"red", align:"center"});
+			group_timeEventText.add(timeEventText[event_i]);
+		}
+		//keys.removeEvent.onDown.add(removeTimeEvent, this, i);	没成功
+		game.input.onDown.add(removeTimeEvent, this);
+	}
+
+	function startTimeEvents(_i){
+		timeEventCounter[_i]++;
+		timeEventText[_i].text = "timeEventCounter["+_i+"]: "+timeEventCounter[_i];
+	}
+
+	function removeTimeEvent(){
+		if(event_i>0){
+			event_i--;
+			game.time.events.remove(timeEvents[event_i]);
+			timeEventText[event_i].text = "timeEvents removed"
+		}	
+		if(event_i == 0){
+			game.world.remove(group_timeEventText);
+		}	
+	}
+
+	 function createGroup(){
+	 	createGroupSeacreature();
+	 	createGroupSeacreature2();
+	 	createGroupCallAll();
+	 	game.time.events.loop(1000*1, createPickChild, this, group_seacreature_2, "seacreatures");
+	 	createGroupDiamond();
+
+	 	//group.inputEnableChildren = true; 	等价于对每个 child.inputEnabled = true;
+	 	//group.onChildInputDown.add(onDown, this);
+	 }
+
+	 function createGroupSeacreature(){
+	 	group_seacreature = game.add.group();
+	 	group_seacreature.position.set(10, 270);
+	 	group_seacreature.createMultiple(4, 'seacreatures', ['blueJellyfish0000', 'crab10000', 'flyingFish0000'], true);
+	 	group_seacreature.align(4, -1, 160, 100, Phaser.center);
+	 	group_seacreature.scale.set(0.4);
+	 	keys.keyboard_remove.onDown.add(removeChild, this);
+	 	keys.keyboard_removeBetween.onDown.add(removeBetween, this);
+	 }
+
+	 function removeChild(){
+	 	group_seacreature.remove(group_seacreature[1]);
+	 }
+
+	 function removeBetween(){ 
+	 	var n ;
+	 	n = game.rnd.between(0, 2);
+	 	group_seacreature.removeBetween(n, n+2);
+	 }
+	 function createGroupSeacreature2(){
+	 	group_seacreature_2 = game.add.group();
+	 	group_seacreature_2.position.set(40, 360);
+	 	group_seacreature_2.createMultiple(4, 'seacreatures','blueJellyfish0000', true);
+	 	group_seacreature_2.align(4, -1, 160, 160, Phaser.center);
+	 	group_seacreature_2.scale.set(0.3);
+	 	group_seacreature_2.setAll("inputEnabled", true);
+	 	group_seacreature_2.callAll("input.enableDrag", "input");
+	 	//group_seacreature_2.pivot.set(group_seacreature_2.x + group_seacreature_2.width/2, group_seacreature_2.y + group_seacreature_2.height/2);
+	 	//game.add.tween(group_seacreature_2).to({scale: 0.5}, 1, "Linear", true, 0, true, true);
+
+	 	//group_seacreature_2 全部移到 group_seacreature
+	 	//group_seacreature_2.moveAll(group_seacreature);
+
+	 	//  Remove the item from the Group.
+        //group_seacreature_2.remove(group_seacreature_2[1]);
+	 	keys.keyboard_top.onDown.add(toTop, this);
+	 }
+
+	 function toTop(){
+	 	//game.world.bringToTop(group_seacreature);
+	 	game.world.swap(group_seacreature, group_seacreature_2);
+	 }
+
+	 function createGroupCallAll(){
+	 	group_coin = game.add.group();
+	 	group_coin.position.set(10, 400);
+	 	group_coin.createMultiple(5, "key_coin", "", true);
+	 	/*
+	 	for(var i=0; i<3; i++){
+	 		group_coin.create(0, 0, "key_coin");
+	 	}
+	 	*/
+	 	group_coin.align(5, -1, 40);
+	 	group_coin.scale.set(0.5);
+	 	group_coin.callAll("animations.add", "animations", "run", [0, 1, 2, 3, 4, 5], 10, true);
+	 	group_coin.callAll("animations.play", "animations", "run", 20, true);
+	 	groupCallAllinput();
+	 }
+
+	 function groupCallAllinput(){
+	 	group_coin.setAll("inputEnabled", true);
+	 	group_coin.callAll("events.onInputDown.add","events.onInputDown", removeCoin);
+	 }
+
+	 function removeCoin(_coin){
+	 	//group_coin.getFirstAlive().kill();
+	 	_coin.kill();
+	 	if(!group_coin.getFirstAlive()){
+	 		game.time.events.add(1000*3, reviveCoin, this);
+	 	}
+	 	game.time.events.add(1000*10, resetCoin, this, group_coin);
+	 }
+
+	 function reviveCoin(){
+	 	group_coin.callAll("revive");
+	 }
+
+	 function resetCoin(_groupCoin){
+	 	var _which = _groupCoin.getFirstDead();
+	 	if(_which){
+	 		//_which.reset(game.rnd.between(5, 20), 400);
+	 		_which.revive();
+	 	}
+	 }
+
+	 function createExtendedGroup(_group, _game, _img){
+	 	extendedGroup = function(game, image){
+	 		Phaser.Group.call(this, game);
+	 		var sprite = this.create(game.world.randomX, game.world.randomY, image);
+	 	};
+	 	extendedGroup.prototype = Object.create(Phaser.Group.prototype);
+	 	extendedGroup.prototype.constructor = extendedGroup;
+	 	_group = new extendedGroup(_game, _img);
+	 }
+
+	 function createPickChild(_group, keyValue){
+	 	var child = [];
+	 	child = _group.iterate("key", keyValue, Phaser.Group.RETURN_CHILD);
+	 	if(child != null){
+	 		if(child.alpha == 0.5){
+		 		child.tint = 0x00ff00;
+		 		child.alpha = 1;
+		 	}else{
+		 		child.tint = 0x000000;
+		 		child.alpha = 0.5;
+		 	}
+	 	}
+	 	else{
+	 		console.log("child null");
+	 	}
+	 }
+
+	 function createGroupDiamond(){
+	 	group_diamond = game.add.group();
+	 	//group_diamond.position.set(100, 500);
+	 	group_diamond.createMultiple(3, "key_diamonds", "", true);
+	 	group_diamond.align(3, -1, 40, 40);
+	 	group_diamond.alignIn(backdrop, Phaser.TOP_CENTER);
+	 	group_diamond.scale.set(0.9);
+	 	startTweenDiamond();
+	 }
+
+	 function startTweenDiamond(){
+	 	tween_diamond = game.add.tween(group_diamond.scale).to({x:1, y:1}, 1000, "Linear", true, 2000, 2, true);
+	 	tween_diamond.onComplete.add(startTweenDiamond, this);
+	 }
+
+	function update(){
+		updateBackground();
+		//updateGroup();
+	}
+
+	function updateBackground(){
+		backdrop.tilePosition.x -= 1;
+		//backdrop.tilePosition.y += 1;
+	}
+
+	function updateGroup(){
+		group_seacreature_2.rotation +=0.2;
+	}
+
+	function render(){
+		game.debug.text("loopCounter: "+loopCounter, 10, 100);
+		game.debug.text("repeatCounter: "+repeatCounter, 10, 120);
+		game.debug.text("addCounter: "+addCounter, 10, 140);
+		game.debug.text("timerCounter: "+timerCounter, 10, 160);
+		game.debug.text("elapsed seconds: "+game.time.totalElapsedSeconds().toFixed(2), 10, 180);
+	}
+	
+		
+	
+</script>
+</body>
+</html>
