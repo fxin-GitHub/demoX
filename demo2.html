@@ -45,7 +45,7 @@ function create(){
 
 	ground = game.add.sprite(0, 0, "key_ground");
 	ground.position.set(0, game.world.height-ground.height);
-	ground.scale.set(0.8, 1);
+	ground.scale.set(0.5, 1);
 	game.physics.arcade.enable(ground);
 	//ground.body.moves = false;
 	ground.body.allowGravity = false;
@@ -85,12 +85,12 @@ function create(){
 	ball = game.add.sprite(0, 0, "key_ball");
 	ball.anchor.set(0.5);
 	ball.scale.set(0.5);
-	ball.position.set(ground.width/2, game.world.height-ground.height-ball.height/2-30);
+	ball.position.set(ground.width/2, game.world.height-ground.height-ball.height/2-100);
 	game.physics.arcade.enable(ball);
 	ball.body.collideWorldBounds = true;
 	ball.body.bounce.set(0.2);
-	ball.body.immovable = true;
-	ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);
+	//ball.body.immovable = true;	//设置后碰撞有问题，有事件，没效果
+	//ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);	//设置后有小问题，交叉过度
 	ball.checkWorldBounds = true;
 	ball.events.onOutOfBounds.add(eventOutOfBounds, this);
 
@@ -132,22 +132,6 @@ function update(){
 		if(colorRedNumber >=255){
 			colorRedNumber = 255;
 		}
-
-	}
-
-
-
-	if(cursors.up.isDown){
-		ground.position.y -=10;
-	}
-	if(cursors.down.isDown){
-		ground.position.y +=10
-	}
-	if(cursors.left.isDown){
-		ground.position.x -=10;
-	}
-	if(cursors.right.isDown){
-		ground.position.x +=10;
 	}
 }
 
