@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo2</title>
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	
+var game = new Phaser.Game(800, 600, Phaser.AUTO, "demo2", {preload:preload, create:create, update:update, render:render});
+
+function preload(){
+	game.load.image("key_undersea", "assets/particlestorm/undersea.jpg");
+	game.load.image("key_ground", "assets/tests/ground.png");
+	game.load.image("key_flectrum", "assets/sprites/flectrum.png");
+	game.load.image("key_fire1", "assets/particles/fire1.png");
+	game.load.image("key_fire2", "assets/particles/fire2.png");
+	game.load.image("key_fire3", "assets/particles/fire3.png");
+	game.load.image("key_ball", "assets/sprites/wizball.png");
+}
+
+var background;
+var ground;
+var group_flectrum;
+var emitter;
+var group1;
+var group2;
+var ball;
+var flag_screenGroup = true;
+var flag_screenGroup1 = false;
+var flag_screenGroup2 = false;
+var keys;
+var cursors;
+var XVector = 100;
+var YVector = 200;
+var colorRedNumber = 0;
+var flag_down = false;
+
+function create(){
+	game.world.setBounds(0, 0, 800, 600);
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	game.physics.arcade.gravity.y = 200;
+
+	background = game.add.image(0, 0, "key_undersea");
+
+	ground = game.add.sprite(0, 0, "key_ground");
+	ground.position.set(0, game.world.height-ground.height);
+	ground.scale.set(0.8, 1);
+	game.physics.arcade.enable(ground);
+	//ground.body.moves = false;
+	ground.body.allowGravity = false;
+	ground.body.immovable = true;
+	ground.body.collideWorldBounds = true;
+	//ground.body.setSize(ground.width, ground.height-4);
+
+	group_flectrum = game.add.group();
+	group_flectrum.enableBody = true;
+	for(var i=0; i<3; i++){
+		var flectrum = group_flectrum.create(0, 0, "key_flectrum");
+		flectrum.position.set(game.rnd.between(ground.width+220*i, ground.width+220*i+100), game.world.height);
+		flectrum.anchor.set(0.5, 1);
+		flectrum.scale.set(game.rnd.between(1.5, 3), game.rnd.between(1, 3));
+		flectrum.body.collideWorldBounds = true;
+		flectrum.body.allowGravity = false;
+		flectrum.body.immovable = true;
+		if(i == 2){
+			game.add.tween(flectrum.scale).to({x:3, y:3}, 4000, "Linear", true, 0, -1, true);
+		}
+	}
+	
+	emitter = game.add.emitter(0, 0);
+	//emitter.width = game.world.width - ground.width;
+	emitter.gravity =0;
+	//emitter.setRotation(0);
+	emitter.emitX = ground.width+20;
+	emitter.emitY = game.world.height;
+	emitter.makeParticles(["key_fire1", "key_fire2", "key_fire3"]);	//key ,frame, quantity
+	emitter.setScale(1, 0.6, 1, 0.5, 4000);
+	emitter.setAlpha(1, 0.4, 3000);
+	emitter.start(false, 3000, 50, -1);	//explode, lifespan, frequency, quantity
+	game.add.tween(emitter).to({emitX: game.world.width-50}, 1000, "Linear", true, 0, -1, true);
+	//game.add.tween(emitter.scale.y).to({y: 0.3}, 2000, "Linear", true, 0, -1, true);
+	//game.add.tween(emitter).to({alpha: 0.3}, 2500, "Linear", true, 0, -1, true);
+	
+	ball = game.add.sprite(0, 0, "key_ball");
+	ball.anchor.set(0.5);
+	ball.scale.set(0.5);
+	ball.position.set(ground.width/2, game.world.height-ground.height-ball.height/2-30);
+	game.physics.arcade.enable(ball);
+	ball.body.collideWorldBounds = true;
+	ball.body.bounce.set(0.2);
+	ball.body.immovable = true;
+	ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);
+	ball.checkWorldBounds = true;
+	ball.events.onOutOfBounds.add(eventOutOfBounds, this);
+
+	game.camera.follow(ball);
+
+	cursors = game.input.keyboard.createCursorKeys();
+	game.input.onDown.add(eventDown, this);
+	game.input.onUp.add(eventUp, this);
+}
+
+function eventOutOfBounds(){
+	ball.kill();
+	ball.revive();
+	ball.reset(ground.width/2, 400);
+}
+function eventDown(){
+	if(!flag_down){
+		flag_down = true;
+	}
+}
+
+function eventUp(){
+	if(flag_down){
+		flag_down = false;
+	}
+	ball.body.velocity.set(XVector, -YVector);
+}
+
+function update(){
+	game.physics.arcade.collide(ball, ground, ballHitGround, null, this);
+	game.physics.arcade.collide(ball, group_flectrum, ballHitFlectrum, null, this);
+
+	if(flag_down){
+		YVector++;
+		if(YVector >=800){
+			YVector = 800;
+		}
+		colorRedNumber++;
+		if(colorRedNumber >=255){
+			colorRedNumber = 255;
+		}
+
+	}
+
+
+
+	if(cursors.up.isDown){
+		ground.position.y -=10;
+	}
+	if(cursors.down.isDown){
+		ground.position.y +=10
+	}
+	if(cursors.left.isDown){
+		ground.position.x -=10;
+	}
+	if(cursors.right.isDown){
+		ground.position.x +=10;
+	}
+}
+
+function ballHitGround(_ball, _ground){
+	//_ball.body.velocity.y = -300;
+}
+
+function ballHitFlectrum(_ball, _flectrum){
+	_ball.body.velocity.x = 0;
+}
+
+function render(){
+	game.debug.text("group_flectrum.length:"+group_flectrum.length, 20, 20);
+	game.debug.text("ball.height:"+ball.height, 20, 40);
+	game.debug.body(ball);
+	game.debug.body(ground);
+	game.debug.body(group_flectrum.getAt(0));
+	game.debug.body(group_flectrum.getAt(1));
+	game.debug.body(group_flectrum.getAt(2));
+}
+
+</script>
+</body>
+</html>
