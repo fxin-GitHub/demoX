@@ -31,8 +31,9 @@ var flag_screenGroup1 = false;
 var flag_screenGroup2 = false;
 var keys;
 var cursors;
-var XVector = 100;
-var YVector = 200;
+var XVector = 150;
+var YVector0 = 100;
+var YVector = YVector0;
 var colorRedNumber = 0;
 var flag_down = false;
 
@@ -40,6 +41,7 @@ function create(){
 	game.world.setBounds(0, 0, 800, 600);
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	game.physics.arcade.gravity.y = 200;
+	game.physics.arcade.checkCollision.down = false;
 
 	background = game.add.image(0, 0, "key_undersea");
 
@@ -87,10 +89,14 @@ function create(){
 	ball.scale.set(0.5);
 	ball.position.set(ground.width/2, game.world.height-ground.height-ball.height/2-100);
 	game.physics.arcade.enable(ball);
-	ball.body.collideWorldBounds = true;
 	ball.body.bounce.set(0.2);
 	//ball.body.immovable = true;	//设置后碰撞有问题，有事件，没效果
 	//ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);	//设置后有小问题，交叉过度
+	//ball.body.checkCollision.up = true;
+	//ball.body.checkCollision.down = false;
+	//ball.body.checkCollision.left = true;
+	//ball.body.checkCollision.right = true;
+	ball.body.collideWorldBounds = true;
 	ball.checkWorldBounds = true;
 	ball.events.onOutOfBounds.add(eventOutOfBounds, this);
 
@@ -114,9 +120,11 @@ function eventDown(){
 
 function eventUp(){
 	if(flag_down){
+		ball.body.velocity.set(XVector, -YVector);
 		flag_down = false;
+		YVector = YVector0;
+		colorRedNumber = 0;
 	}
-	ball.body.velocity.set(XVector, -YVector);
 }
 
 function update(){
@@ -125,8 +133,8 @@ function update(){
 
 	if(flag_down){
 		YVector++;
-		if(YVector >=800){
-			YVector = 800;
+		if(YVector >=500){
+			YVector = 500;
 		}
 		colorRedNumber++;
 		if(colorRedNumber >=255){
@@ -144,13 +152,14 @@ function ballHitFlectrum(_ball, _flectrum){
 }
 
 function render(){
-	game.debug.text("group_flectrum.length:"+group_flectrum.length, 20, 20);
-	game.debug.text("ball.height:"+ball.height, 20, 40);
 	game.debug.body(ball);
 	game.debug.body(ground);
-	game.debug.body(group_flectrum.getAt(0));
-	game.debug.body(group_flectrum.getAt(1));
-	game.debug.body(group_flectrum.getAt(2));
+	game.debug.text("flag_down:"+flag_down, 20, 20);
+	game.debug.text("XVector:"+XVector, 20, 40);
+	game.debug.text("YVector:"+YVector, 20, 60);
+	game.debug.text("colorRedNumber:"+colorRedNumber, 20, 80);
+	
+	
 }
 
 </script>
