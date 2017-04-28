@@ -35,7 +35,7 @@ createScreen = function(_index, _game,_ball){
 	this.groupFlectrum.enableBody = true;
 	for(var i=0; i<3; i++){
 		var flectrum = this.groupFlectrum.create(0, 0, "key_flectrum");
-		flectrum.position.set(this.game.rnd.between(250*i, 250*i+100), this.game.world.height);
+		flectrum.position.set(this.game.rnd.between(100+250*i, 100+250*i+50), this.game.world.height);
 		flectrum.anchor.set(0.5, 1);
 		flectrum.scale.set(this.game.rnd.between(1.5, 3), this.game.rnd.between(1, 3));
 		//flectrum.body.collideWorldBounds = true;
