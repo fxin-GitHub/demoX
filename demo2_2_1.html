@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo2_2_1</title>
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+
+createScreen = function(_game, _background, _ground, _group, _ball){
+	this.game = _game;
+	this.background = _background;
+	this.ground = _ground;
+	this.group = _group;
+	this.ball = _ball;
+
+	this.background = this.game.add.image(0, 0, "key_undersea");
+
+	this.ground = this.game.add.sprite(0, 0, "key_ground");
+	this.ground.position.set(0, this.game.world.height-this.ground.height);
+	this.ground.scale.set(0.5, 1);
+	this.game.physics.arcade.enable(this.ground);
+	this.ground.body.allowGravity = false;
+	this.ground.body.immovable = true;
+	this.ground.body.collideWorldBounds = true;
+
+	this.group.addMultiple([this.background, this.ground]);
+	//return this.group;
+}
+
+createScreen.prototype.update = function(){
+	this.game.physics.arcade.collide(this.ground, this.ball, eventBallHitGround, null, this);
+}
+
+function eventBallHitGround(_ball, _ground){
+	_ball.body.velocity.y = -500;
+}
+
+
+
+	
+var game = new Phaser.Game(800, 600, Phaser.AUTO, "demo2", {preload:preload, create:create, update:update, render:render});
+
+function preload(){
+	game.load.image("key_undersea", "assets/particlestorm/undersea.jpg");
+	game.load.image("key_ground", "assets/tests/ground.png");
+	game.load.image("key_flectrum", "assets/sprites/flectrum.png");
+	game.load.image("key_fire1", "assets/particles/fire1.png");
+	game.load.image("key_fire2", "assets/particles/fire2.png");
+	game.load.image("key_fire3", "assets/particles/fire3.png");
+	game.load.image("key_ball", "assets/sprites/wizball.png");
+}
+
+var background;
+var ground;
+var group_flectrum;
+var emitter;
+var group;
+var screen;
+
+var ball;
+
+var keys;
+var cursors;
+var XVector = 150;
+var YVector0 = 100;
+var YVector = YVector0;
+var colorRedNumber = 0;
+var flag_down = false;
+
+function create(){
+	game.world.setBounds(0, 0, 800, 600);
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	game.physics.arcade.gravity.y = 200;
+	game.physics.arcade.checkCollision.down = false;
+
+	group = game.add.group();
+	group1 = game.add.group();
+	group2 = game.add.group();
+
+	/*
+	group.add(new createGroup(game, background, ground, group));
+	//group.position.set(0);
+	group1.add(new createGroup(game, background1, ground1,  group1));
+	//group1.position.set(800, 0);
+	group2.add(new createGroup(game, background2, ground2,  group2));
+	//group2.position.set(800*2, 0);
+	*/
+
+	
+	ball = game.add.sprite(0, 0, "key_ball");
+	ball.anchor.set(0.5);
+	ball.scale.set(0.5);
+	ball.position.set(50, 500);
+	//ball.position.set(group.ground.width/2, game.world.height- group.ground.height-ball.height/2-100);
+	game.physics.arcade.enable(ball);
+	ball.body.bounce.set(0.2);
+	//ball.body.immovable = true;	//设置后碰撞有问题，有事件，没效果
+	//ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);	//设置后有小问题，交叉过度
+	ball.body.collideWorldBounds = true;
+	ball.checkWorldBounds = true;
+	ball.events.onOutOfBounds.add(eventOutOfBounds, this);
+
+	game.camera.follow(ball);
+
+	screen = new createScreen(game, background, ground, group, ball);
+	//ball.bringToTop();
+
+	cursors = game.input.keyboard.createCursorKeys();
+	game.input.onDown.add(eventDown, this);
+	game.input.onUp.add(eventUp, this);
+
+	//group.removeAll();
+	group.getAt(0).tint = 0xff0000;
+}
+
+
+
+function eventOutOfBounds(){
+	ball.kill();
+	ball.revive();
+	ball.reset(50, 400);
+}
+function eventDown(){
+	if(!flag_down){
+		flag_down = true;
+	}
+}
+
+function eventUp(){
+	if(flag_down){
+		ball.body.velocity.set(XVector, -YVector);
+		flag_down = false;
+		YVector = YVector0;
+		colorRedNumber = 0;
+	}
+}
+
+function update(){
+	//game.physics.arcade.collide(ball, ground);
+	//game.physics.arcade.collide(ball, group_flectrum, ballHitFlectrum, null, this);
+	screen.update();
+	if(flag_down){
+		YVector++;
+		if(YVector >=500){
+			YVector = 500;
+		}
+		colorRedNumber++;
+		if(colorRedNumber >=255){
+			colorRedNumber = 255;
+		}
+	}
+	if(cursors.left.isDown){
+		group.position.x -= 10;
+	}
+	if(cursors.right.isDown){
+		group.x += 1;
+	}
+}
+
+function ballHitFlectrum(_ball, _flectrum){
+	_ball.body.velocity.x = 0;
+
+}
+
+
+function render(){
+	//game.debug.body(ball);
+	//game.debug.body(group.ground);
+	game.debug.text("flag_down:"+flag_down, 20, 20);
+	game.debug.text("XVector:"+XVector, 20, 40);
+	game.debug.text("YVector:"+YVector, 20, 60);
+	game.debug.text("colorRedNumber:"+colorRedNumber, 20, 80);
+}
+
+</script>
+</body>
+</html>
