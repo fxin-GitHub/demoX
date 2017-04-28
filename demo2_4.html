@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>demo2_2_4</title>
+	<title>demo2_4</title>
 	<script type="text/javascript" src="./phaser.min.js"></script>
 </head>
 <body>
@@ -22,7 +22,6 @@ createScreen = function(_index, _game,_ball){
 		this.game.physics.arcade.enable(this.ground);
 		this.ground.body.allowGravity = false;
 		this.ground.body.immovable = true;
-		//this.ground.body.collideWorldBounds = true;
 		//this.ground.body.setSize(this.ground.width, this.ground.height-4);
 	}
 	/*
@@ -58,15 +57,12 @@ createScreen = function(_index, _game,_ball){
 	this.emitter.start(false, 3000, 50, -1);	//explode, lifespan, frequency, quantity
 	this.game.add.tween(this.emitter).to({emitX: this.game.camera.width}, 1000, "Linear", true, 0, -1, true);
 
-	//this.ground.bringToTop();
-
 	this.group = this.game.add.group();
 	if(this.index >0){
 		this.group.addMultiple([this.background, this.groupFlectrum, this.emitter]);
 	}else{
 		this.group.addMultiple([this.background, this.ground, this.groupFlectrum, this.emitter]);
 	}
-	
 	//return this.group;
 }
 
@@ -75,7 +71,7 @@ createScreen.prototype.update = function(){
 	this.game.physics.arcade.collide(this.ball, this.groupFlectrum, this.ballHitFlectrum, null, this);
 }
 
- createScreen.prototype.ballHitFlectrum = function(_ball, _flectrum){
+createScreen.prototype.ballHitFlectrum = function(_ball, _flectrum){
 	this.ball.body.velocity.x = 0;
 }
 
@@ -88,7 +84,6 @@ createScreen.prototype.debug = function(){
 }
 
 
-	
 var game = new Phaser.Game(800, 600, Phaser.AUTO, "demo2", {preload:preload, create:create, update:update, render:render});
 
 function preload(){
@@ -101,10 +96,6 @@ function preload(){
 	game.load.image("key_ball", "assets/sprites/wizball.png");
 }
 
-var screen;
-var screen1;
-var screen2;
-
 var ball;
 var keys;
 var cursors;
@@ -113,15 +104,15 @@ var YVector0 = 100;
 var YVector = YVector0;
 var colorRedNumber = 0;
 var flag_down = false;
-var flag_screen = true;
-var flag_screen1 = false;
-var flag_screen2 = false;
+var screen;
+var screen1;
+var screen2;
 
 function create(){
-	game.world.setBounds(0, 0, 800*20, 600);
+	game.world.setBounds(0, 0, 800*30, 600);
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 	game.physics.arcade.gravity.y = 200;
-	//game.physics.arcade.checkCollision.down = false;
+	game.physics.arcade.checkCollision.down = false;
 	
 	ball = game.add.sprite(0, 0, "key_ball");
 	ball.anchor.set(0.5);
@@ -131,7 +122,7 @@ function create(){
 	ball.body.bounce.set(0.2);
 	//ball.body.immovable = true;	//设置后碰撞有问题，有事件，没效果
 	//ball.body.setCircle(ball.width/2, ball.width/2, ball.width/2);	//设置后有小问题，交叉过度
-	//ball.body.collideWorldBounds = true;
+	ball.body.collideWorldBounds = true;
 	ball.checkWorldBounds = true;
 	ball.events.onOutOfBounds.add(eventOutOfBounds, this);
 
@@ -146,9 +137,7 @@ function create(){
 	screen2.group.position.set(800*2, 0);
 
 	ball.bringToTop();
-
 	game.camera.follow(ball);
-
 	cursors = game.input.keyboard.createCursorKeys();
 	game.input.onDown.add(eventDown, this);
 	game.input.onUp.add(eventUp, this);
@@ -180,26 +169,13 @@ function update(){
 	screen2.update();
 	if(screen.group.position.x <game.camera.position.x-800){
 		screen.group.position.set(screen2.group.position.x+800, 0);
-		flag_screen = false;
-		flag_screen1 = true;
-		flag_screen2 = false;
-		
 	}
-	if(screen1.group.position.x <game.camera.position.x-800){
+	else if(screen1.group.position.x <game.camera.position.x-800){
 		screen1.group.position.set(screen.group.position.x+800, 0);
-		flag_screen = false;
-		flag_screen1 = false;
-		flag_screen2 = true;
-		
 	}
-	if(screen2.group.position.x <game.camera.position.x-800){
+	else if(screen2.group.position.x <game.camera.position.x-800){
 		screen2.group.position.set(screen1.group.position.x+800, 0);
-		flag_screen = true;
-		flag_screen1 = false;
-		flag_screen2 = false;
-		
 	}
-
 	if(flag_down){
 		YVector +=5;
 		if(YVector >=500){
@@ -210,30 +186,10 @@ function update(){
 			colorRedNumber = 255;
 		}
 	}
-	if(cursors.left.isDown){
-		screen.group.position.x -= 10;
-		screen1.group.position.x -=10;
-		screen2.group.position.x -=10;
-	}
-	if(cursors.right.isDown){
-		screen.group.position.x += 10;
-		screen1.group.position.x +=10;
-		screen2.group.position.x +=10;
-	}
-	if(cursors.up.isDown){
-		screen.group.position.y -= 10;
-		screen1.group.position.y -=10;
-		screen2.group.position.y -=10;
-	}
-	if(cursors.down.isDown){
-		screen.group.position.y += 10;
-		screen1.group.position.y +=10;
-		screen2.group.position.y +=10;
-	}
 }
 
 function render(){
-	game.debug.body(ball);
+	//game.debug.body(ball);
 	game.debug.text("flag_down:"+flag_down, 20, 20);
 	game.debug.text("XVector:"+XVector, 20, 40);
 	game.debug.text("YVector:"+YVector, 20, 60);
@@ -241,14 +197,7 @@ function render(){
 	game.debug.text("group.position.x:"+screen.group.position.x, 20, 100);
 	game.debug.text("group1.position.x:"+screen1.group.position.x, 20, 120);
 	game.debug.text("group2.position.x:"+screen2.group.position.x, 20, 140);
-	game.debug.text("flag_screen:"+flag_screen, 20, 180);
-	game.debug.text("flag_screen1:"+flag_screen1, 20, 200);
-	game.debug.text("flag_screen2:"+flag_screen2, 20, 220);
-	game.debug.cameraInfo(game.camera, 20, 260);
-	
-	//screen.debug();
-	screen1.debug();
-	//screen2.debug();
+	game.debug.cameraInfo(game.camera, 20, 180);
 }
 
 </script>
