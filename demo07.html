@@ -7,6 +7,120 @@
 <body>
 <script type="text/javascript">
 	
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, "demo07", {preload:preload, create:create, update:update, render:render});
+
+function preload(){
+	game.load.image("kris", "assets/pics/kris-jovo.jpg");
+    game.load.image('orb', 'assets/sprites/orb-red.png');
+    game.load.spritesheet('mummy', 'assets/sprites/metalslug_mummy37x45.png', 37, 45, 18);
+    game.load.image('arrow', 'assets/sprites/arrow.png');
+
+}
+
+var background;
+var orb;
+var orb1;
+var orb2;
+var rect;
+var mummy;
+var rect1;
+var arrow;
+var ropeArrow;
+var bmd;
+
+function create(){
+	background = game.add.image(0, 0, "kris");
+	background.width = game.world.width;
+	background.height = game.world.height;
+	console.log("texture.width:"+background.texture.width);
+	console.log("_frame.width:"+background._frame.width);
+
+	orb = game.add.sprite(0, 0, "orb");
+	orb.anchor.set(0.5);
+	orb1 = game.add.sprite(0, 0, "orb");
+	orb1.anchor.set(0.5);
+	
+	rect = new Phaser.Rectangle(100, 100, 200, 100);
+	orb.alignIn(rect, Phaser.BOTTOM_LEFT);
+	orb1.alignTo(rect, 	Phaser.RIGHT_BOTTOM, 10, 0);
+
+	mummy = game.add.sprite(300, 300, "mummy", 0);
+	orb2 = game.add.sprite(mummy.width/2, -mummy.height/2, "orb");
+	orb2.anchor.set(0.5);
+	mummy.addChild(orb2);
+
+	rect1 = new Phaser.Rectangle(0, 0, 200, 200);
+	background.crop (rect1);
+
+	orb.inputEnabled = true;
+	orb.input.enableDrag(true);
+
+	arrow = game.add.sprite(500, 100, "arrow");
+	arrow.anchor.set(0, 0.5);
+	arrow.pivot.set(arrow.width, 50);
+
+	var cellLength = 10;
+	var cellTotal = 20;
+	var points = [];
+	var count = 0;
+	for(var i=0; i<cellTotal; i++){
+		points.push(new Phaser.Point(i*cellLength, 0));
+	}
+	ropeArrow = game.add.rope(500, 400, "arrow", 0, points);
+	ropeArrow.updateAnimation = function(){
+		count +=0.1;
+		if(count == 10){
+			count = 0;
+		}
+		for(i =0; i<this.points.length; i++){
+			this.points[i].y = Math.sin(i*0.9+count)*2;
+		}
+	}
+
+	bmd = game.add.bitmapData(128,128);
+    bmd.ctx.rect(0,0,128,128);
+    bmd.ctx.fillStyle = '#ff0000';
+    bmd.ctx.fill();
+    bmd.addToWorld(600, 100);
+
+}
+
+function update(){
+
+	background.x = game.input.x;
+	background.y = game.input.y;
+	rect1.x = game.input.x;
+	rect1.y = game.input.y;
+	background.updateCrop();
+
+	if(checkOverlap(orb, orb1)){
+		console.log("overlap");
+	}
+
+	arrow.rotation +=0.05;
+
+	//arrow.pivot.x = orb.x;	//不能變，
+	//arrow.pivot.y = orb.y;
+	arrow.position.x = game.input.x;
+	arrow.position.y = game.input.y;
+
+
+}
+
+function checkOverlap(sprite1, sprite2){
+	var bound1 = sprite1.getBounds();
+	var bound2 = sprite2.getBounds();
+	return Phaser.Rectangle.intersects(bound1, bound2);
+}
+
+function render(){
+	game.debug.rectangle(rect, "#ff0000", false); //obj, color, fill
+	game.debug.geom(rect.getPoint(Phaser.BOTTOM_LEFT), "#00fff0");
+	game.debug.geom(new Phaser.Point(arrow.y, arrow.y), "#00fff0");
+	//game.debug.geom(new Phaser.Point(arrow.anchor.x, arrow.anchor.y), "#0ffff0");
+	game.debug.rectangle(background);
+	
+}
 
 	
 </script>
