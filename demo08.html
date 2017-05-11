@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo08</title>
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	var game = new Phaser.Game(800, 600, Phaser.CANVAS, "demo08", {preload:preload, create:create, update:update, render:render});
+
+	function preload(){
+		game.load.spritesheet('centroid', 'assets/sprites/centroid.png', 16, 16);
+		game.load.spritesheet('balls', 'assets/sprites/balls.png', 17, 17);
+	}
+
+	var line;
+	var midPoint;
+
+	var currentPoint;
+	var centroid;
+	var points = [];
+	var flagOver = false;
+
+	var circle;
+	var bmd;
+	var pointRandom;
+	var colors;
+	var color = 0;
+
+	var lineDraw;
+	var flagSetting = false;
+
+	var handle1;
+	var handle2;
+	var handle3;
+	var handle4;
+	var line1;
+	var line2;
+	var intersectionPoint;
+	var normalLine;
+	var reflectionLine;
+
+	var p1;
+	var p2;
+	var p3;
+	var p4;
+	var d2 = 1;
+	var d3 = 6;
+	var d4 = 16;
+
+	var polygon;
+
+	function create(){
+		createLine();
+		createCentroid();
+		createRandomPoint();
+		createLineDraw();
+		createIntersection();
+		createPlayingPoint();
+		createPolygon();
+	}
+
+	function createLine(){
+		line = new Phaser.Line(100, 100, 200, 200);
+	}
+
+	function createCentroid(){
+		currentPoint = game.add.image(0, 0, "centroid", 0);
+		currentPoint.anchor.set(0.5);
+		currentPoint.alpha = 0.5;
+		centroid = game.add.sprite(10, 10, "centroid", 1);
+		centroid.anchor.set(0.5);
+		centroid.visible = true;
+		game.input.onTap.add(onTapHandler, this);
+	}
+
+	function createRandomPoint(){
+		circle = new Phaser.Circle(400, 400, 200);
+		var graphics =game.add.graphics(0, 0);
+		graphics.lineStyle(1, 0xff0000);
+		graphics.drawCircle(circle.x, circle.y, circle.radius*2);
+		bmd = game.add.bitmapData(game.world.width, game.world.height);
+		bmd.addToWorld();
+		//bmd.circle(circle.radius, circle.x, circle.y);
+		pointRandom = new Phaser.Point()
+		colors = Phaser.Color.HSVColorWheel();
+	}
+
+	function onTapHandler(pPointer){
+		var img = game.add.sprite(pPointer.x, pPointer.y, "centroid");
+		points.push(img.position);
+	}
+
+	function createLineDraw(){
+		lineDraw = new Phaser.Line(200, 300, 300, 200);
+		game.input.onDown.add(onDownHandleLineDraw, this);
+	}
+
+	function onDownHandleLineDraw(){
+		flagSetting = true;
+		lineDraw.start.set(game.input.activePointer.x, game.input.activePointer.y);
+	}
+
+	function createIntersection(){
+		handle1 = game.add.sprite(100, 200, 'balls', 0);
+	    handle1.anchor.set(0.5);
+	    handle1.inputEnabled = true;
+	    handle1.input.enableDrag(true);
+
+	    handle2 = game.add.sprite(400, 300, 'balls', 0);
+	    handle2.anchor.set(0.5);
+	    handle2.inputEnabled = true;
+	    handle2.input.enableDrag(true);
+
+	    handle3 = game.add.sprite(200, 400, 'balls', 1);
+	    handle3.anchor.set(0.5);
+	    handle3.inputEnabled = true;
+	    handle3.input.enableDrag(true);
+
+	    handle4 = game.add.sprite(500, 500, 'balls', 1);
+	    handle4.anchor.set(0.5);
+	    handle4.inputEnabled = true;
+	    handle4.input.enableDrag(true);
+
+	    line1 = new Phaser.Line(handle1.x, handle1.y, handle2.x, handle2.y);
+	    line2 = new Phaser.Line(handle3.x, handle3.y, handle4.x, handle4.y);
+	    normalLine = new Phaser.Line();
+	    reflectionLine = new Phaser.Line();
+
+	    intersectionPoint = new Phaser.Point();
+	}
+
+	function createPlayingPoint(){
+		p1 = new Phaser.Point(600, 300);
+		p2 = new Phaser.Point(p1.x+50, p1.y+50);
+		p3 = new Phaser.Point(p2.x+50, p2.y+50);
+		p4 = new Phaser.Point(p3.x+50, p3.y+50);
+	}
+
+	function createPolygon(){
+		polygon = new Phaser.Polygon();
+		polygon.setTo(100, 100, 200, 100, 200, 200, 100, 200);
+		var lGraphics = game.add.graphics(0, 0);
+		lGraphics.beginFill(0xff0000);
+		lGraphics.drawPolygon(polygon.points);
+		lGraphics.endFill();
+	}
+
+	function update(){
+		updateLine();
+		updateCentroid();
+		updateRandomPoint();
+		updateLineDraw();
+		updateIntersection();
+		updatePlayingPoint();
+	}
+
+	function updateLine(){
+		line.centerOn(game.input.activePointer.x+50, game.input.activePointer.y+50);
+		line.rotate(0.01);
+		//midPoint = new Phaser.Point();
+		//line.midPoint(midPoint);
+		midPoint = line.midPoint();	//代替上面
+	}
+
+	function updateCentroid(){
+		currentPoint.position.copyFrom(game.input.activePointer);
+		if(points.lenght > 0){
+			var lCentroid = Phaser.Point.centroid(points);
+			lCentroid.anchor.set(0.5);
+			lCentroid.visible = true;
+			centroid.position.copyFrom(lCentroid);
+		}
+	}
+
+	function updateRandomPoint(){
+		for(var i=0; i<10; i++){
+			circle.random(pointRandom);
+			pointRandom.floor();
+			bmd.setPixel(pointRandom.x, pointRandom.y, colors[color].r, colors[color].g, colors[color].b, colors[color].a);
+			color = game.math.wrapValue(color, 1, 359);
+		}
+	}
+
+	function updateLineDraw(){
+		if(flagSetting){
+			if(game.input.activePointer.isDown){
+				lineDraw.end.set(game.input.activePointer.x, game.input.activePointer.y);
+			}else{
+				flagSetting = false;
+			}
+		}
+	}
+
+	function updateIntersection(){
+		line1.fromSprite(handle1, handle2, true);	//useCenter
+		line2.fromSprite(handle3, handle4, true);
+		intersectionPoint = line1.intersects(line2, true);
+		if(intersectionPoint){
+			normalLine.fromAngle(intersectionPoint.x, intersectionPoint.y, line1.normalAngle, 100);
+			var tempLine = line1.reflect(line2);
+			reflectionLine.fromAngle(intersectionPoint.x, intersectionPoint.y, tempLine, 100);
+		}
+	}
+
+	function updatePlayingPoint(){
+		p2.rotate(p1.x, p1.y, d2, true, 100);
+		p3.rotate(p2.x, p2.y, d3, true, 40);
+		p4.rotate(p3.x, p3.y, d4, true, 60);
+	}
+
+	function render(){
+		game.debug.geom(line, "#ff0000");
+		game.debug.geom(midPoint, "#ffffff");
+		game.debug.lineInfo(line, 20, 20);
+		game.debug.text(points.lenght, 20, 80);
+		game.debug.text(circle.radius, 20, 100);
+		game.debug.geom(lineDraw);
+		game.debug.geom(line1);
+		game.debug.geom(line2);
+		game.debug.geom(p1);
+		game.debug.geom(p2);
+		game.debug.geom(p3);
+		game.debug.geom(p4);
+		game.context.strokeStyle = "rgb(255, 0, 0)";
+		game.context.beginPath();
+		game.context.moveTo(p1.x, p1.y);
+		game.context.lineTo(p2.x, p2.y);
+		game.context.lineTo(p3.x, p3.y);
+		game.context.lineTo(p4.x, p4.y);
+		game.context.stroke();
+		game.context.closePath();
+		
+
+		if(intersectionPoint){
+			game.context.fillStyle = "RGB(255, 0, 0)";
+			game.context.fillRect(intersectionPoint.x, intersectionPoint.y, 4, 4);
+			//game.debug.rectangle(intersectionPoint.x, intersectionPoint.y, 4, 4, "0xff0000");	
+			game.debug.geom(normalLine);
+			game.debug.geom(reflectionLine);		
+		}
+
+	}
+
+</script>
+</body>
+</html>
