@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo1_1</title>
+	<script type="text/javascript" src="phaser.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, "demo1", {preload:preload, create:create, update:update, render:render});
+
+	function preload(){
+		game.load.image("key_undersea", "assets/particlestorm/undersea.jpg");
+		game.load.image("key_ground", "assets/tests/ground.png");
+		game.load.image("key_bullet", "assets/bullets/bullet279.png");
+		game.load.image("key_shocktroopers_toy", "assets/pics/shocktroopers_toy.png");
+		game.load.image("key_tree", "assets/tests/tree.png");
+		game.load.image("key_spyro", "assets/pics/spyro.png");
+
+		game.load.image("city1", "demo1Assets/city1.png");
+		game.load.image("city2", "demo1Assets/city2.png");
+		game.load.image("cloud", "demo1Assets/cloud.jpg");
+		game.load.image("pink", "demo1Assets/pink.png");
+	}
+
+	var undersea;
+	var ground;
+	var tree;
+	var spyro;
+	var trooper;
+	var bullet;
+	var arrow;
+	var flag_down = false;
+	var flag_hold = true;
+	var flag_miss = false;
+	var flag_holdArrow = true;
+	var flag_missTrooper = false;
+	var speed = 600;
+	var keys;
+	var group;
+	var group1;
+	var flag_firstScreen = true;
+	var flag_moveBackground = false;
+
+	var city1;
+	var city2;
+	var cloud;
+	var bgSpeed = -7;
+	
+
+	function create(){
+		game.world.setBounds(0, 0, 800, 600);
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+		game.physics.arcade.gravity.y = 500;
+		//game.physics.arcade.checkCollision.down = false;
+		//game.physics.arcade.setBoundsToWorld(true, true, false, false, false);
+
+		//undersea = game.add.tileSprite(0, 0, 800, 600, "key_undersea");
+		cloud = game.add.tileSprite(0,0,2079,851,'cloud');
+        cloud.fixedToCamera = true;
+        city1 =game.add.tileSprite(0,300,1798,359,'city1');
+        city1.fixedToCamera = true;
+        city2 = game.add.tileSprite(0,100,1353,580,'city2');
+        city2.fixedToCamera = true;
+		
+		ground = game.add.sprite(0, game.world.height-32*2,  "key_ground");
+		game.physics.arcade.enable(ground);
+		ground.body.allowGravity = false;
+		ground.scale.set(2, 2);
+		ground.body.setSize(ground.width, ground.height-10, 0, 10);
+		ground.body.immovable = true;
+		
+		tree = game.add.sprite(600, 400, "key_tree");
+		game.physics.arcade.enable(tree);
+		tree.anchor.set(0.5);
+		tree.scale.set(1.5);
+		
+		spyro = game.add.sprite(tree.x, tree.y-tree.height, "key_spyro");
+		game.physics.arcade.enable(spyro);
+		spyro.anchor.set(0.5);
+		spyro.scale.set(0.3);
+
+		arrow = game.add.sprite(spyro.x, spyro.y-spyro.height, "key_bullet");
+		game.physics.arcade.enable(arrow);
+		arrow.anchor.set(0.5);
+		arrow.scale.set(2, 0.2);
+		arrow.body.drag.set(100, -100);
+
+		group = game.add.group();
+		group.position.set(0);
+		group.addMultiple([ground, tree, spyro, arrow]);
+
+
+		//undersea1 = game.add.tileSprite(0, 0, 800, 600, "key_undersea");
+		
+		ground1 = game.add.sprite(0, game.world.height-32*2,  "key_ground");
+		game.physics.arcade.enable(ground1);
+		ground1.body.allowGravity = false;
+		ground1.scale.set(2, 2);
+		ground1.body.setSize(ground1.width, ground1.height-10, 0, 10);
+		ground1.body.immovable = true;
+		
+		tree1 = game.add.sprite(600, 400, "key_tree");
+		game.physics.arcade.enable(tree1);
+		tree1.anchor.set(0.5);
+		tree1.scale.set(1.5);
+		
+		spyro1 = game.add.sprite(tree1.x, tree1.y-tree1.height, "key_spyro");
+		game.physics.arcade.enable(spyro1);
+		spyro1.anchor.set(0.5);
+		spyro1.scale.set(0.3);
+
+		arrow1 = game.add.sprite(spyro1.x, spyro1.y-spyro1.height, "key_bullet");
+		game.physics.arcade.enable(arrow1);
+		arrow1.anchor.set(0.5);
+		arrow1.scale.set(2, 0.2);
+		arrow1.body.drag.set(150, 0);
+
+		group1 = game.add.group();
+		group1.position.set(800, 0);
+		group1.addMultiple([ground1, tree1, spyro1, arrow1]);
+
+		
+		trooper = game.add.sprite(200, 400, "key_shocktroopers_toy");
+		game.physics.arcade.enable(trooper);
+		trooper.anchor.set(0.5);
+		trooper.scale.set(0.3);
+		//game.camera.follow(trooper);
+
+		bullet = game.add.sprite(0,0, "key_bullet");
+		game.physics.arcade.enable(bullet);
+		bullet.anchor.set(0, 0.5);
+		bullet.scale.set(2, 0.2);
+		bullet.body.allowGravity = flag_hold?false:true;
+		bullet.body.drag.set(100, 0);
+		bullet.checkWorldBounds = true;
+		bullet.events.onOutOfBounds.add(eventOnOutOfBounds, this);
+
+		//trooper.addchildren(bullet);
+
+		game.input.onDown.add(eventOnDown, this);
+		game.input.onUp.add(eventOnUp, this);
+		keys = game.input.keyboard.addKeys({addAngle:Phaser.Keyboard.ONE});
+		keys.addAngle.onDown.add(eventAddAngle, this);
+	
+	}
+
+	function eventOnDown(){	
+		if(flag_down){
+			console.log("eventOnDown failed!!!");
+			return;
+		}						
+		flag_down = true;
+		bullet.body.allowGravity = flag_hold?false:true;
+		console.log("onDown, flag_down:"+flag_down);
+	}
+
+	function eventOnUp(){
+		if(flag_down){
+			flag_down = false;
+			if(flag_hold){
+				flag_hold = false;
+				bullet.body.allowGravity = flag_hold?false:true;
+				bullet.lifespan = 6000;
+				game.physics.arcade.velocityFromAngle(bullet.angle, speed, bullet.body.velocity);
+				console.log("onUp, bullet angle:"+bullet.angle);
+			}
+		}
+	}
+
+	function eventAddAngle(){
+		bullet.angle -=10;
+		group1.position.x -=50;
+	}
+
+	function eventMiss(){
+		if(flag_miss){
+			console.log("eventMiss failed!!!");
+			return;
+		}
+		flag_miss = true;
+		//flag_hold = false;
+		bullet.kill();
+		if(flag_firstScreen){
+			arrow.rotation = game.physics.arcade.angleBetween(arrow, trooper);
+			game.physics.arcade.velocityFromAngle(arrow.angle, speed, arrow.body.velocity);
+		}else{
+			arrow1.rotation = game.physics.arcade.angleBetween(arrow1, trooper);
+			game.physics.arcade.velocityFromAngle(arrow1.angle, speed, arrow1.body.velocity);
+		}
+		if(flag_holdArrow){
+			flag_holdArrow = false;
+		}
+		
+	}
+
+	function eventKillSpyro(_bullet, _spyro){
+		if(flag_hold){
+			console.log("eventKillSpyro failed!!!");
+			return;
+		}
+		_spyro.kill();
+		_bullet.kill();
+		flag_holdArrow = false;
+		reviveBullet();
+		flag_moveBackground = true;
+		game.time.events.add(1000, timeEventKillArrow, this);
+		//trooper.body.velocity.x = 400;
+		//game.time.events.add(2000, checkMove, this);
+		//game.add.tween(undersea).to({x:-200}, 1000, "Linear", true, 0, 0, true);
+		console.log("kill spyro, bullet lifespan:"+bullet.lifespan);
+	}
+
+	function eventOnOutOfBounds(){
+		if(flag_hold){
+			console.log("out of bounds return!!!");
+			return;
+		}
+		bullet.kill();
+		flag_miss = true;
+		if(flag_firstScreen){
+			arrow.rotation = game.physics.arcade.angleBetween(arrow, trooper);
+			game.physics.arcade.velocityFromAngle(arrow.angle, speed, arrow.body.velocity);
+		}else{
+			arrow1.rotation = game.physics.arcade.angleBetween(arrow1, trooper);
+			game.physics.arcade.velocityFromAngle(arrow1.angle, speed, arrow1.body.velocity);
+		}
+		if(flag_holdArrow){
+			flag_holdArrow = false;
+		}
+	}
+
+	function checkMove(){
+		trooper.body.velocity.x = trooper.body.velocity.x ?0:800;
+		console.log("checkMove:"+trooper.body.velocity.x);
+	}
+
+	function timeEventKillArrow(){
+		if(flag_firstScreen){
+			arrow.kill();
+		}else{
+			arrow1.kill();
+		}
+		
+	}
+
+	function reviveBullet(){
+		if(bullet.alive == true){
+			console.log("revive bullet failed!!!");
+			return;
+		}
+		bullet.revive();
+		//bullet.x = trooper.x;
+		//bullet.y = trooper.y;
+		bullet.reset(trooper.x, trooper.y);
+		bullet.angle = 0;
+		bullet.lifespan = 1000*600;
+		flag_hold = true;
+		flag_miss = false;
+		bullet.body.allowGravity = flag_hold?false:true;
+		console.log("revive bullet");
+	}
+
+	function eventKillTrooper(_arrow, _trooper){
+		if(flag_holdArrow){
+			console.log("eventKillTrooper failed!!!");
+			return;
+		}
+		_trooper.kill()
+		_arrow.kill();
+		flag_missTrooper = false;
+		console.log("kill trooper");
+	}
+
+	function eventKillArrow(_arrow, _trooper){
+		if(flag_missTrooper){
+			console.log("eventKillArrow failed!!!");
+			return;
+		}
+		flag_missTrooper = true;
+		_arrow.kill();
+		reviveBullet();
+		console.log("kill arrow");
+	}
+
+	function eventFixTree(_ground, _tree){
+		_tree.body.moves = false;
+		_tree.body.allowGravity = false;
+		_tree.body.immovable = true;
+	}
+
+	function update(){
+		//undersea.tilePosition.x = -game.camera.x;
+		game.physics.arcade.collide(ground, trooper);
+		game.physics.arcade.collide(ground, tree, eventFixTree, null, this);
+		game.physics.arcade.collide(tree, spyro);
+		game.physics.arcade.collide(spyro, arrow);
+		game.physics.arcade.collide(ground, bullet, eventMiss, null, this);
+		game.physics.arcade.collide(bullet, spyro, eventKillSpyro, null, this);
+		if(flag_hold){
+			bullet.x = trooper.x;
+			bullet.y = trooper.y;
+			if(flag_down){
+				bullet.rotation -=0.01;
+			}
+		}else{
+			bullet.rotation +=0.01;
+		}
+		//bullet.body.allowGravity = flag_hold?false:true;
+		if(flag_miss){
+			//weapon1.fireAngle = game.physics.arcade.angleBetween(group_spyro.getFirstAlive(), trooper);
+			//weapon1.fire();
+			game.physics.arcade.collide(arrow, trooper, eventKillTrooper, null, this);
+			game.physics.arcade.collide(arrow, ground, eventKillArrow, null, this);
+			game.physics.arcade.collide(arrow1, trooper, eventKillTrooper, null, this);
+			game.physics.arcade.collide(arrow1, ground1, eventKillArrow, null, this);
+		}
+		/*
+		game.world.wrap(trooper);
+		if(trooper.x>=game.world.width-10){
+			if(spyro.alive){
+				console.log("revive spyro failed");
+			} else{
+				spyro.revive();
+				spyro.reset(tree.x, tree.y-tree.height);
+				console.log("revive spyro");
+			}
+			if(arrow.alive == true){
+				arrow.kill();
+				console.log("revive arrow failed");
+			}
+			arrow.revive();
+			arrow.reset(spyro.x, spyro.y-spyro.height);
+			flag_holdArrow = true;
+			flag_missTrooper = false;
+			console.log("revive arrow");
+		}
+		*/
+
+		game.physics.arcade.collide(ground1, trooper);
+		game.physics.arcade.collide(ground1, tree1, eventFixTree, null, this);
+		game.physics.arcade.collide(tree1, spyro1);
+		game.physics.arcade.collide(spyro1, arrow1);
+		game.physics.arcade.collide(ground1, bullet, eventMiss, null, this);
+		game.physics.arcade.collide(bullet, spyro1, eventKillSpyro, null, this);
+		if(flag_moveBackground){
+			cloud.autoScroll(bgSpeed*10, 0);
+            city1.autoScroll(bgSpeed*20, 0);
+            city2.autoScroll(bgSpeed*30, 0);
+			group.position.x -=5;
+			group1.position.x -=5;
+			if(flag_firstScreen){
+				if(group1.position.x <=0){
+					flag_moveBackground = false;
+					flag_firstScreen = !flag_firstScreen;
+					group.position.x =800;
+					reviveGroup();
+					cloud.stopScroll();
+					city1.stopScroll();
+					city2.stopScroll();
+				}
+			}else{
+				if(group.position.x <=0){
+					flag_moveBackground = false;
+					flag_firstScreen = !flag_firstScreen;
+					group1.position.x =800;
+					reviveGroup();
+					cloud.stopScroll();
+					city1.stopScroll();
+					city2.stopScroll();
+				}
+			}
+		}
+
+	}
+
+	function reviveGroup(){
+		if(flag_firstScreen){
+			spyro1.revive();
+			spyro1.reset(tree1.x, tree1.y-tree1.height);
+			arrow1.revive();
+			arrow1.reset(spyro1.x, spyro1.y-spyro1.height);
+		}else{
+			spyro.revive();
+			spyro.reset(tree.x, tree.y-tree.height);
+			arrow.revive();
+			arrow.reset(spyro.x, spyro.y-spyro.height);
+		}
+	}
+
+	function render(){
+		game.debug.text( "flag_down:"+flag_down, 20, 20);
+		game.debug.text( "flag_hold:"+flag_hold, 20, 40);
+		game.debug.text( "flag_miss:"+flag_miss, 20, 60);
+		game.debug.text( "arrow.alive:"+arrow.alive, 20, 80);
+		game.debug.text( "arrow1.alive:"+arrow1.alive, 20, 100);
+		/*
+		game.debug.body(ground);
+		game.debug.body(trooper);
+		game.debug.body(tree);
+		game.debug.body(spyro);
+		game.debug.body(arrow);
+		*/
+	}
+
+</script>
+</body>
+</html>
