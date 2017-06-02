@@ -432,7 +432,7 @@ game.Play.prototype ={
 			this.game.city1.autoScroll(this.game.scrollSpeed*20, 0);
 			this.game.city2.autoScroll(this.game.scrollSpeed*30, 0);
 			this.game.ground.autoScroll(this.game.scrollSpeed*40, 0);
-			this.game.enemy.enemyTree.body.velocity.x = this.game.scrollSpeed*70;
+			this.game.enemy.enemyTree.body.velocity.x = this.game.scrollSpeed*60;
 			if(this.game.enemy.enemyTree.x+this.game.enemy.enemyTree.width/2 <this.game.camera.x){
 				this.game.enemy.enemyTree.reset(this.game.camera.x+this.game.camera.width+this.game.enemy.enemyTree.width,
 					 this.game.ground.y);
