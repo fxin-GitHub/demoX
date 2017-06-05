@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>demo1_5_6</title>
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<p>
+    <xmp id="show">
+    </xmp>
+</p>
+<p>
+    <xmp id="init">
+    </xmp>
+</p>
+<p>
+    <input type="text" id="text1" value="用户名(username)" />
+</p>
+<p>
+    <input type="text" id="text2" value="password" />
+</p>
+<p>
+    <input type="button" id="enter" value="发消息给Native" onclick="testClick();"/>
+</p>
+<p>
+    <input type="button" id="enter1" value="调用Native方法" onclick="testClick1();"/>
+</p>
+<p>
+    <input type="button" id="enter2" value="显示html" onclick="testDiv();" />
+</p>
+<p>
+    <input type="file" value="打开文件" />
+</p>
+
+<script>
+    function testDiv() {
+        document.getElementById("show").innerHTML = document.getElementsByTagName("html")[0].innerHTML;
+    }
+
+    function testClick() {
+        var str1 = document.getElementById("text1").value;
+        var str2 = document.getElementById("text2").value;
+
+        //send message to native
+        var data = {id: 1, content: "这是一个图片 <img src=\"a.png\"/> test\r\nhahaha"};
+        window.WebViewJavascriptBridge.send(
+            data
+            , function(responseData) {
+                document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
+            }
+        );
+
+    }
+
+    function testClick1() {
+        var str1 = document.getElementById("text1").value;
+        var str2 = document.getElementById("text2").value;
+
+        //call native method
+        window.WebViewJavascriptBridge.callHandler(
+            'submitFromWeb'
+            , {'param': '中文测试'}
+            , function(responseData) {
+                document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
+            }
+        );
+    }
+
+    function bridgeLog(logContent) {
+        document.getElementById("show").innerHTML = logContent;
+    }
+
+    function connectWebViewJavascriptBridge(callback) {
+        if (window.WebViewJavascriptBridge) {
+            callback(WebViewJavascriptBridge)
+        } else {
+            document.addEventListener(
+                'WebViewJavascriptBridgeReady'
+                , function() {
+                    callback(WebViewJavascriptBridge)
+                },
+                false
+            );
+        }
+    }
+
+    connectWebViewJavascriptBridge(function(bridge) {
+        bridge.init(function(message, responseCallback) {
+            console.log('JS got a message', message);
+            var data = {
+                'Javascript Responds': '测试中文!'
+            };
+            console.log('JS responding with', data);
+            responseCallback(data);
+        });
+
+        bridge.registerHandler("functionInJs", function(data, responseCallback) {
+            document.getElementById("show").innerHTML = ("data from Java: = " + data);
+            var responseData = "Javascript Says Right back aka!";
+            responseCallback(responseData);
+        });
+    });
+ </script>
+
+<!--
+<script type="text/javascript">
+Player = function(_game, _x, _y, _enemy){
+	//Phaser.Sprite.call(this, _game, _x, _y);
+	this.game = _game;
+	this.x = _x;
+	this.y = _y;
+	this.keyPlayerBody = this.game.customConfig.playerBody.key;
+	this.keyPlayerBullet = this.game.customConfig.playerBullet.key;
+	this.ground = this.game.ground;
+	this.enemy = _enemy;
+	this.flag = this.game.flag;
+	this.playerBody;
+	this.playerBullet;
+
+	this.launchSpeed = 700;
+	this.flagPlayerHoldBullet = true;
+	this.flagPlayerBulletMissedEnemy = false;
+	this.flagCoolDown = true;
+	this.flagRotate = -1;
+
+	this.playerBody = this.game.add.sprite(this.x, this.y, this.keyPlayerBody);
+	this.playerBody.anchor.set(0.5);
+	this.playerBody.scale.set(0.1, 0.2);
+	this.game.physics.arcade.enable(this.playerBody);
+	this.playerBody.body.gravity.y = 200;
+	//this.playerBody.body.immovable = true;
+
+	this.playerBullet = this.game.add.sprite(this.playerBody.x, this.playerBody.y, this.keyPlayerBullet);
+	this.playerBullet.anchor.set(0, 0.5);
+	this.playerBullet.scale.set(0.15, 0.01);
+	this.playerBullet.tint = 0xff0000;
+	this.game.physics.arcade.enable(this.playerBullet);
+	this.playerBullet.body.gravity.y = 500;
+	this.playerBullet.body.allowGravity = false;
+	this.playerBullet.checkWorldBounds = true;
+	this.playerBullet.events.onOutOfBounds.add(this.playerBulletOutOfBounds, this);
+
+	this.game.input.onDown.add(this.eventOnKeyDown, this);
+	this.game.input.onUp.add(this.eventOnKeyUp, this);	
+};
+
+
+Player.prototype ={
+	//constructor: Player,
+	update: function(){
+		this.game.physics.arcade.collide(this.playerBody, this.ground, this.playerBodyHitGround, null, this);
+		this.game.physics.arcade.collide(this.playerBullet, this.enemy.enemyBody, this.playerBulletHitEnemy, null, this);
+		this.game.physics.arcade.collide(this.playerBullet, this.ground, this.playerBulletHitGround, null, this);
+		if(this.flagPlayerHoldBullet){
+			this.playerBullet.x = this.playerBody.x;
+			this.playerBullet.y = this.playerBody.y;
+			if(this.flag.onDown && this.flagCoolDown){
+				this.changeAngle(1*this.flagRotate);
+				if(this.playerBullet.angle <-90){
+					this.flagRotate = -this.flagRotate;
+				}
+				if(this.playerBullet.angle >0){
+					this.flagRotate = -this.flagRotate;
+				}
+			}
+		}else{
+			this.changeAngle(1.2);
+		}
+		if(this.enemy.flagEnemyBulletMissedPlayer){
+			this.revivePlayerBullet();
+			this.flagCoolDown = true;
+		}
+	},
+
+	eventOnKeyDown: function(){
+		if(this.flag.onDown){
+			console.log("eventOnKeyDown return!!!");
+			return;
+		}
+		this.flag.onDown = true;
+		
+	},
+
+	eventOnKeyUp: function(){
+		if(this.flag.onDown){
+			this.flag.onDown = false;
+			if(this.flagPlayerHoldBullet){
+			
+				this.PlayerLaunch();
+				//this.flagPlayerHoldBullet = false;
+			}
+		}
+	},
+
+	changeAngle: function(p){
+		this.playerBullet.rotation += p*0.01;
+	},
+
+	PlayerLaunch: function(){
+		if(this.flagPlayerHoldBullet && this.flagCoolDown){
+			this.game.physics.arcade.velocityFromAngle(this.playerBullet.angle, this.launchSpeed, this.playerBullet.body.velocity);
+			this.playerBullet.body.allowGravity = true;
+			this.flagPlayerHoldBullet = false;
+			this.flagCoolDown = false;
+		}
+	},
+
+	playerBulletHitEnemy: function(playerBullet, enemyBody){
+		playerBullet.kill();
+		enemyBody.kill();
+		this.enemy.enemyBullet.kill();
+		this.revivePlayerBullet();
+		this.flag.canMove = true;
+	},
+
+	playerBulletHitGround: function(playerBullet, ground){
+		if(this.flagPlayerHoldBullet){
+			return;
+		}
+		playerBullet.kill();
+		this.flagPlayerBulletMissedEnemy = true;
+		this.enemy.enemyLaunch();
+	},
+
+	playerBulletOutOfBounds: function(playerBullet){
+		playerBullet.kill();
+		this.flagPlayerBulletMissedEnemy = true;
+		this.enemy.enemyLaunch();
+	},
+
+	revivePlayerBullet: function(){
+		if(this.playerBullet.alive == true){
+			return;
+		}
+		this.playerBullet.reset(this.playerBody.x, this.playerBody.y);
+		this.playerBullet.angle = 0;
+		this.playerBullet.body.allowGravity = false;
+		this.flagPlayerHoldBullet = true;
+		this.flagPlayerBulletMissedEnemy = false;
+		//this.flagCoolDown = true;
+	},
+
+	setEnemy: function(enemy){
+		this.enemy = enemy;
+	},
+
+	render: function(){
+		this.game.debug.text("flagPlayerHoldBullet: "+this.flagPlayerHoldBullet, 20, this.game.world.height-20);
+		this.game.debug.text("flagPlayerBulletMissedEnemy: "+this.flagPlayerBulletMissedEnemy, 20, this.game.world.height-40);
+		this.game.debug.text("this.playerBullet.alive: "+this.playerBullet.alive, 20, 60);
+		this.game.debug.body(this.playerBody);
+		this.game.debug.body(this.playerBullet);
+	}
+};
+
+Enemy = function(_game, _x, _y, _player){
+	this.game = _game;
+	this.x = _x;
+	this.y = _y;
+	this.player = _player;
+	this.keyEnemyTree = this.game.customConfig.tree.key;
+	this.keyEnemyBody = this.game.customConfig.enemyBody.key;
+	this.keyEnemyBullet = this.game.customConfig.enemyBullet.key;
+	this.ground = this.game.ground;
+	this.flag = this.game.flag;
+	this.enemyTree;
+	this.enemyBody;
+	this.enemyBullet;
+	this.launchSpeed = 700;
+	this.flagEnemyHoldBullet = true;
+	this.flagEnemyBulletMissedPlayer = false;
+
+	this.enemyTree = this.game.add.sprite(0, 0, this.keyEnemyTree);
+	this.enemyTree.anchor.set(0.5, 1);
+	this.enemyTree.scale.set(0.15, 0.7);
+	this.game.physics.arcade.enable(this.enemyTree);
+	//this.enemyTree.body.immovable = true;
+	this.enemyTree.body.allowGravity = false;
+	this.enemyTree.body.gravity.y = 200;
+	this.enemyTree.position.set(this.x, this.ground.y);
+
+	this.enemyBody = this.game.add.sprite(0, 0, this.keyEnemyBody);
+	this.enemyBody.anchor.set(0.5);
+	this.enemyBody.scale.set(0.1, 0.2);
+	this.game.physics.arcade.enable(this.enemyBody);
+	this.enemyBody.body.allowGravity = true;
+	this.enemyBody.body.gravity.y = 200;
+	this.enemyBody.position.set(this.enemyTree.x, this.enemyTree.y-this.enemyTree.height-this.enemyBody.height/2);
+
+	this.enemyBullet = this.game.add.sprite(0, 0, this.keyEnemyBullet);
+	this.enemyBullet.anchor.set(0, 0.5);
+	this.enemyBullet.scale.set(0.15, 0.01);
+	this.enemyBullet.angle = -180;
+	this.game.physics.arcade.enable(this.enemyBullet);
+	this.enemyBullet.body.allowGravity = false;
+	this.enemyBullet.body.gravity.y = 500;
+	this.enemyBullet.checkWorldBounds = true;
+	this.enemyBullet.events.onOutOfBounds.add(this.enemyBulletOutOfBounds, this);
+	this.enemyBullet.position.set(this.enemyBody.x, this.enemyBody.y-this.enemyBody.height/2);
+};
+
+Enemy.prototype = {
+	update: function(){
+		this.game.physics.arcade.collide(this.enemyTree, this.ground);
+		this.game.physics.arcade.collide(this.enemyBody, this.enemyTree);
+		this.game.physics.arcade.collide(this.enemyBody, this.ground);
+		this.game.physics.arcade.collide(this.enemyBullet, this.player.playerBody, this.enemyBulletHitPlayerBody, null, this);
+		this.game.physics.arcade.collide(this.enemyBullet, this.ground, this.enemyBulletHitGround, null, this);
+
+		this.enemyBody.x = this.enemyTree.x;
+		this.enemyBody.y = this.enemyTree.y-this.enemyTree.height-this.enemyBody.height/2;
+		this.enemyBullet.rotation = this.game.physics.arcade.angleBetween(this.enemyBullet, this.player.playerBody)+0.1;
+		if(this.flagEnemyHoldBullet){
+			this.enemyBullet.x = this.enemyBody.x;
+			this.enemyBullet.y = this.enemyBody.y;
+		}else{
+			this.changeAngle(-1);
+		}
+		if(this.player.flagPlayerBulletMissedEnemy){
+			this.enemyLaunch();
+		}
+	},
+
+	enemyBulletHitPlayerBody: function(enemyBullet, playerBody){
+		enemyBullet.kill();
+		playerBody.kill();
+		this.player.playerBullet.kill();
+		this.flagEnemyBulletMissedPlayer = false;
+		this.gameOver();
+	},
+
+	enemyBulletHitGround: function(enemyBullet, ground){
+		this.flagEnemyBulletMissedPlayer = true;
+		enemyBullet.kill();
+		this.game.time.events.add(100, this.reviveEnemyBullet, this);
+	},
+
+	enemyLaunch: function(){
+		if(this.flagEnemyHoldBullet){
+			this.enemyBullet.rotation = this.game.physics.arcade.angleBetween(this.enemyBullet, this.player.playerBody)+0.1;
+			this.game.physics.arcade.velocityFromAngle(this.enemyBullet.angle+10, this.launchSpeed, this.enemyBullet.body.velocity);
+			this.enemyBullet.body.allowGravity = true;
+			this.flagEnemyHoldBullet = false;	//不加的话，转弯也要朝向player
+		}
+	},
+
+	enemyBulletOutOfBounds: function(enemyBullet){
+		if(this.flagEnemyHoldBullet){
+			console.log("enemyBulletOutOfBounds, but,,,")
+			return;
+		}
+		this.enemyBullet.kill();
+		this.flagEnemyBulletMissedPlayer = true;//
+		this.game.time.events.add(100, this.reviveEnemyBullet, this);
+		console.log("enemyBulletOutOfBounds");
+	},
+
+	reviveEnemyBullet: function(){
+		this.enemyBullet.reset(this.enemyBody.x, this.enemyBody.y);
+		this.enemyBullet.angle = -180;
+		this.enemyBullet.body.allowGravity = false;
+		this.flagEnemyHoldBullet = true;
+		this.flagEnemyBulletMissedPlayer = false;//
+		console.log("reviveEnemyBullet");
+	},
+
+	changeAngle: function(p){
+		this.enemyBullet.rotation += p*0.005;
+	},
+
+	gameOver: function(){
+		this.game.state.start("menu");
+	},
+
+	render: function(){
+		//this.game.debug.text(this.)
+	}
+};
+
+var game = new Phaser.Game(800, 600, Phaser.CANVAS, "...");
+
+game.flag ={
+	onDown: false,
+	canMove: false,
+	enemyTreeX: 600,
+	checkStop: false,
+};
+
+var assetsPath = "demo1Assets/";
+game.customConfig = {
+	cloud: {
+		key: "cloud",
+		url: assetsPath+"cloud.jpg"
+	},
+	city1: {
+		key: "city1",
+		url: assetsPath+"city1.png"
+	},
+	city2: {
+		key: "city2",
+		url: assetsPath+"city2.png"
+	},
+	ground: {
+		key: "ground",
+		url: assetsPath+"ground.png"
+	},
+	playerBody: {
+		key: "pink",
+		url: assetsPath+"pink.png",
+		defaultKey: "playerBody",
+		defaultUrl: assetsPath+"playerBody.png"
+	},
+	playerBullet: {
+		key: "pink",
+		url: assetsPath+"pink.png",
+		defaultKey: "playerBullet",
+		defaultUrl: assetsPath+"playerBullet.png"
+	},
+	enemyBody: {
+		key: "pink",
+		url: assetsPath+"pink.png",
+		defaultKey: "enemyBody",
+		defaultUrl: assetsPath+"enemyBody.png"
+	},
+	enemyBullet: {
+		key: "pink",
+		url: assetsPath+"pink.png",
+		defaultKey: "enemyBullet",
+		defaultUrl: assetsPath+"enemyBullet.png"
+	},
+	tree: {
+		key: "pink",
+		url: assetsPath+"pink.png",
+		defaultKey: "tree",
+		defaultUrl: assetsPath+"tree.png"
+	},
+	pink: {
+		key: "pink",
+		url: assetsPath+"pink.png"
+	},
+	go: {
+		key: "go",
+		url: assetsPath+"go.png"
+	},
+	replay: {
+		key: "replay",
+		url: assetsPath+"replay.png"
+	}
+
+};
+
+game.Menu = function(_game){
+	this.game = _game;
+	this.flagShowBtnStart = true;
+	//console.log("menu constructor");
+}
+
+game.Menu.prototype ={
+	preload: function(){
+		this.game.load.image(this.game.customConfig.go.key, this.game.customConfig.go.url);
+		this.game.load.image(this.game.customConfig.replay.key, this.game.customConfig.replay.url);
+		//console.log("menu preload");
+	},
+
+	create: function(){
+		this.btnStart = game.add.button(this.game.world.centerX, this.game.world.centerY, this.game.customConfig.go.key, this.startGame, this);
+		this.btnStart.anchor.set(0.5);
+		this.btnReplay = game.add.button(this.game.world.centerX, this.game.world.centerY+100, this.game.customConfig.replay.key, this.startGame, this);
+		this.btnReplay.anchor.set(0.5);
+		if(this.flagShowBtnStart){
+			this.btnStart.visible = true;
+			this.btnReplay.visible = false;
+			this.flagShowBtnStart = false;
+		}else{
+			this.btnStart.visible = false;
+			this.btnReplay.visible = true;
+		}
+		console.log("menu create");
+	},
+
+	startGame: function(){
+		this.game.state.start("play");
+	}
+}
+
+game.Play = function(_game){
+	this.game = _game;
+}
+
+game.Play.prototype ={
+	preload: function (){
+		this.game.load.image(game.customConfig.cloud.key, game.customConfig.cloud.url);
+		this.game.load.image(game.customConfig.city1.key, game.customConfig.city1.url);
+		this.game.load.image(game.customConfig.city2.key, game.customConfig.city2.url);
+		this.game.load.image(game.customConfig.ground.key, game.customConfig.ground.url);
+		this.game.load.image(game.customConfig.pink.key, game.customConfig.pink.url);
+	},
+
+	create: function (){
+		this.game.physics.startSystem(Phaser.Physics.ARCADE);
+		//game.physics.arcade.gravity.y = 400;
+		this.game.stage.backgroundColor = '#a8e6ff';
+		this.game.scrollSpeed = -5;
+
+	    this.game.cloud = this.game.add.tileSprite(0,0,2079,851,'cloud');
+	    this.game.cloud.fixedToCamera = true;
+	    this.game.city1 = this.game.add.tileSprite(0,300,1798,359,'city1');
+	    this.game.city1.fixedToCamera = true;
+	    this.game.city2 = this.game.add.tileSprite(0,100,1353,580,'city2');
+	    this.game.city2.fixedToCamera = true;
+	    this.game.ground = this.game.add.tileSprite(0, 0, 1000, 32, this.game.customConfig.ground.key);
+	    this.game.ground.scale.set(2);
+	    this.game.ground.position.set(0, this.game.world.height-this.game.ground.height*2);
+	    this.game.physics.arcade.enable(this.game.ground);
+	    this.game.ground.body.immovable = true;
+	    this.game.ground.body.allowGravity = false;
+
+	    this.game.player = new Player(this.game, 180, this.game.world.centerY+200, null);
+	    this.game.enemy = new Enemy(this.game, this.game.flag.enemyTreeX, 0, this.game.player);
+	    this.game.player.setEnemy(this.game.enemy);  
+	},
+
+	update: function(){
+		this.game.player.update();
+		this.game.enemy.update();
+
+		this.game.cloud.autoScroll(this.game.scrollSpeed*10, 0);
+		if(this.game.flag.canMove){
+			this.game.city1.autoScroll(this.game.scrollSpeed*20, 0);
+			this.game.city2.autoScroll(this.game.scrollSpeed*30, 0);
+			this.game.ground.autoScroll(this.game.scrollSpeed*40, 0);
+			this.game.enemy.enemyTree.body.velocity.x = this.game.scrollSpeed*60;
+			if(this.game.enemy.enemyTree.x+this.game.enemy.enemyTree.width/2 <this.game.camera.x){
+				this.game.enemy.enemyTree.reset(this.game.camera.x+this.game.camera.width+this.game.enemy.enemyTree.width,
+					 this.game.ground.y);
+				this.game.enemy.enemyTree.scale.set(this.game.rnd.realInRange(0.1, 0.2), this.game.rnd.realInRange(0.5, 0.8));
+				this.game.enemy.enemyBody.revive();
+				this.game.enemy.enemyBody.position.set(this.game.enemy.enemyTree.x, 
+					this.game.enemy.enemyTree.y-this.game.enemy.enemyTree.height-this.game.enemy.enemyBody.height/2);
+				this.game.enemy.reviveEnemyBullet();
+				this.game.flag.checkStop = true;
+				console.log("reset tree");
+			}
+			if(this.game.flag.checkStop){
+				if(this.game.enemy.enemyTree.x<this.game.flag.enemyTreeX+this.game.rnd.between(-30, 30)){
+					this.game.flag.canMove = false;
+					this.game.flag.checkStop = false;
+					this.game.city1.stopScroll();
+					this.game.city2.stopScroll();
+					this.game.ground.stopScroll();
+					this.game.enemy.enemyTree.body.velocity.x = 0;
+					this.game.enemy.enemyBody.x = this.game.enemy.enemyTree.x;
+					this.game.player.flagCoolDown = true;
+					//console.log(this.game.enemy.enemyTree.x, this.game.enemy.enemyTree.y);
+					//console.log(this.game.enemy.enemyBody.x, this.game.enemy.enemyBody.y);
+					
+				}
+			}
+		}
+	},
+
+	render: function(){
+		this.game.player.render();
+		this.game.debug.geom(new Phaser.Point(this.game.ground.x, this.game.ground.y), "rgba(255, 0, 0, 1)");
+		this.game.debug.geom(new Phaser.Point(this.game.enemy.enemyBody.x, this.game.enemy.enemyBody.y), "rgba(255, 0, 0, 1)");
+		this.game.debug.geom(new Phaser.Point(this.game.enemy.enemyTree.x, this.game.enemy.enemyTree.y), "rgba(255, 0, 0, 1)");
+	}
+}
+
+game.state.add("menu", game.Menu);
+game.state.add("play", game.Play);
+game.state.start("menu");
+
+</script>
+-->
+ 
+</body>
+</html>
