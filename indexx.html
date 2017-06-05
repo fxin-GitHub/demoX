@@ -367,10 +367,6 @@ Enemy.prototype = {
 
 	gameOver: function(){
 		this.game.state.start("menu");
-		window.WebViewJavascriptBridge.send(
-            {"status":"game over"},
-            null
-        );
 	},
 
 	render: function(){
