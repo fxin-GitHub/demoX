@@ -52,14 +52,14 @@
 
     }
 
-    function testClick1() {
+    function testClick1(data = {'param': '中文测试'}) {
         var str1 = document.getElementById("text1").value;
         var str2 = document.getElementById("text2").value;
 
         //call native method
         window.WebViewJavascriptBridge.callHandler(
             'submitFromWeb'
-            , {'param': '中文测试'}
+            , data
             , function(responseData) {
                 document.getElementById("show").innerHTML = "send get responseData from java, data = " + responseData
             }
@@ -367,7 +367,8 @@ Enemy.prototype = {
 
 	gameOver: function(){
 		this.game.state.start("menu");
-		testClick1();
+		var data = { "state":"game over"};
+		testClick1(data);
 	},
 
 	render: function(){
