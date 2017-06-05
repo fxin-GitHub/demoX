@@ -370,7 +370,9 @@ Enemy.prototype = {
 		window.WebViewJavascriptBridge.callHandler(
 			"submitFromWeb",
 			{"param": "gameOver\n playerBody.alive:"+playerBody.alive},
-			null
+			function(){
+				
+			}
 		)
 	},
 
