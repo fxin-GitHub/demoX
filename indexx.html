@@ -369,9 +369,7 @@ Enemy.prototype = {
 		this.game.state.start("menu");
 		window.WebViewJavascriptBridge.send(
             {"status":"game over"},
-            , function(responseData) {
-                document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
-            }
+            ,null
         );
 	},
 
