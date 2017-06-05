@@ -370,6 +370,11 @@ Enemy.prototype = {
 
 	gameOver: function(){
 		this.game.state.start("menu");
+		window.WebViewJavascriptBridge.callHandler(
+			"submitFromWeb",
+			{"param": "gameOver\n playerBody.alive:"+playerBody.alive},
+			null
+		)
 	},
 
 	render: function(){
