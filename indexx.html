@@ -367,13 +367,12 @@ Enemy.prototype = {
 
 	gameOver: function(){
 		this.game.state.start("menu");
-		window.WebViewJavascriptBridge.callHandler(
-			"submitFromWeb",
-			{"param": "gameOver\n playerBody.alive:"+playerBody.alive},
-			function(){
-				
-			}
-		)
+		window.WebViewJavascriptBridge.send(
+            {"status":"game over"},
+            , function(responseData) {
+                document.getElementById("show").innerHTML = "repsonseData from java, data = " + responseData
+            }
+        );
 	},
 
 	render: function(){
