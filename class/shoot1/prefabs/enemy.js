@@ -19,7 +19,7 @@ class Enemy extends Phaser.Sprite{
 
 		this.enemyTree = this.game.add.sprite(0, 0, customConfig.tree.key);
 		this.enemyTree.anchor.set(0.5, 1);
-		this.enemyTree.scale.set(0.15, 0.7);
+		this.enemyTree.scale.set(0.15, 0.3+this.game.rnd.realInRange(0, 0.7));
 		this.game.physics.arcade.enable(this.enemyTree);
 		//this.enemyTree.body.immovable = true; //穿透
 		this.enemyTree.body.allowGravity = false;

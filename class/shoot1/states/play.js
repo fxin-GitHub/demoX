@@ -24,25 +24,7 @@ class Play extends Phaser.State{
 	    this.player = new Player(this.game, 180, this.game.world.centerY+200,null, this.ground);
 	    this.enemy = new Enemy(this.game, customConfig.common.enemyTreeX, 0, this.player, this.ground);
 	    this.player.setEnemy(this.enemy);  
-	    /*
-	    this.keys = this.game.input.keyboard.addKeys({newPlayer:Phaser.Keyboard.P, newEnemy:Phaser.Keyboard.ONE});
-		this.keys.newPlayer.onDown.add(this.keyEvents, this);
-		this.keys.newEnemy.onDown.add(this.keyEvents, this);
-		*/
 	}
-
-	/*
-	keyEvents(key){
-		switch(key.keyCode){
-			case Phaser.Keyboard.P:
-				this.newPlayer = new Player(this.game, 200, 200, this.enemy, this.ground);
-				break;
-			case Phaser.Keyboard.ONE:
-				this.newEnemy = new Enemy(this.game, 400, 200, this.player, this.ground);
-				break;
-		}
-	}
-	*/
 
 	update(){
 		this.player.update();
@@ -53,9 +35,10 @@ class Play extends Phaser.State{
 			this.city2.autoScroll(customConfig.common.scrollSpeed*30, 0);
 			this.ground.autoScroll(customConfig.common.scrollSpeed*40, 0);
 			this.enemy.enemyTree.body.velocity.x = customConfig.common.scrollSpeed*65;
+			this.enemy.enemyBody.body.velocity.x = customConfig.common.scrollSpeed*65;
 			if(this.enemy.enemyTree.x+this.enemy.enemyTree.width/2 <this.game.camera.x){
 				this.enemy.enemyTree.reset(this.game.camera.x+this.game.camera.width+this.enemy.enemyTree.width, this.ground.y);
-				this.enemy.enemyTree.scale.set(this.game.rnd.realInRange(0.1, 0.2), this.game.rnd.realInRange(0.5, 0.8));
+				this.enemy.enemyTree.scale.set(this.game.rnd.realInRange(0.12, 0.2), this.game.rnd.realInRange(0.2, 1));
 				this.enemy.enemyBody.revive();
 				this.enemy.enemyBody.position.set(this.enemy.enemyTree.x, 
 					this.enemy.enemyTree.y-this.enemy.enemyTree.height-this.enemy.enemyBody.height/2);
@@ -64,14 +47,14 @@ class Play extends Phaser.State{
 				console.log("reset tree");
 			}
 			if(customConfig.flag.checkStop){
-				if(this.enemy.enemyTree.x<customConfig.common.enemyTreeX+this.game.rnd.between(-30, 30)){
+				if(this.enemy.enemyTree.x<customConfig.common.enemyTreeX+this.game.rnd.between(-30, 50)){
 					customConfig.flag.canMove = false;
 					customConfig.flag.checkStop = false;
 					this.city1.stopScroll();
 					this.city2.stopScroll();
 					this.ground.stopScroll();
 					this.enemy.enemyTree.body.velocity.x = 0;
-					this.enemy.enemyBody.x = this.enemy.enemyTree.x;
+					this.enemy.enemyBody.body.velocity.x = 0;
 					this.player.flagCoolDown = true;
 				}
 			}
