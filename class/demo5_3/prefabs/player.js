@@ -19,9 +19,10 @@ class Player extends Phaser.Sprite{
 		this.flagPlayerBulletMissedEnemy = false;
 		this.flagCoolDown = true;
 
-		this.playerBody = this.game.add.sprite(this.x, this.y, customConfig.playerBody.key);
+		this.playerBody = this.game.add.sprite(0, 0, customConfig.playerBody.key);
 		this.playerBody.anchor.set(0.5);
 		this.playerBody.scale.set(0.1, 0.2);
+		this.playerBody.position.set(this.x, this.ground.y-100);
 		this.game.physics.arcade.enable(this.playerBody);
 		this.playerBody.body.gravity.y = 200;
 		//this.playerBody.body.immovable = true;//穿透
