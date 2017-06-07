@@ -341,26 +341,7 @@ var Play = function (_Phaser$State) {
 			this.player = new _player2.default(this.game, 180, this.game.world.centerY + 200, null, this.ground);
 			this.enemy = new _enemy2.default(this.game, _customConfig2.default.common.enemyTreeX, 0, this.player, this.ground);
 			this.player.setEnemy(this.enemy);
-			/*
-   this.keys = this.game.input.keyboard.addKeys({newPlayer:Phaser.Keyboard.P, newEnemy:Phaser.Keyboard.ONE});
-   this.keys.newPlayer.onDown.add(this.keyEvents, this);
-   this.keys.newEnemy.onDown.add(this.keyEvents, this);
-   */
 		}
-
-		/*
-  keyEvents(key){
-  	switch(key.keyCode){
-  		case Phaser.Keyboard.P:
-  			this.newPlayer = new Player(this.game, 200, 200, this.enemy, this.ground);
-  			break;
-  		case Phaser.Keyboard.ONE:
-  			this.newEnemy = new Enemy(this.game, 400, 200, this.player, this.ground);
-  			break;
-  	}
-  }
-  */
-
 	}, {
 		key: "update",
 		value: function update() {
@@ -372,9 +353,10 @@ var Play = function (_Phaser$State) {
 				this.city2.autoScroll(_customConfig2.default.common.scrollSpeed * 30, 0);
 				this.ground.autoScroll(_customConfig2.default.common.scrollSpeed * 40, 0);
 				this.enemy.enemyTree.body.velocity.x = _customConfig2.default.common.scrollSpeed * 65;
+				this.enemy.enemyBody.body.velocity.x = _customConfig2.default.common.scrollSpeed * 65;
 				if (this.enemy.enemyTree.x + this.enemy.enemyTree.width / 2 < this.game.camera.x) {
 					this.enemy.enemyTree.reset(this.game.camera.x + this.game.camera.width + this.enemy.enemyTree.width, this.ground.y);
-					this.enemy.enemyTree.scale.set(this.game.rnd.realInRange(0.1, 0.2), this.game.rnd.realInRange(0.5, 0.8));
+					this.enemy.enemyTree.scale.set(this.game.rnd.realInRange(0.12, 0.2), this.game.rnd.realInRange(0.2, 1));
 					this.enemy.enemyBody.revive();
 					this.enemy.enemyBody.position.set(this.enemy.enemyTree.x, this.enemy.enemyTree.y - this.enemy.enemyTree.height - this.enemy.enemyBody.height / 2);
 					this.enemy.reviveEnemyBullet();
@@ -382,14 +364,14 @@ var Play = function (_Phaser$State) {
 					console.log("reset tree");
 				}
 				if (_customConfig2.default.flag.checkStop) {
-					if (this.enemy.enemyTree.x < _customConfig2.default.common.enemyTreeX + this.game.rnd.between(-30, 30)) {
+					if (this.enemy.enemyTree.x < _customConfig2.default.common.enemyTreeX + this.game.rnd.between(-30, 50)) {
 						_customConfig2.default.flag.canMove = false;
 						_customConfig2.default.flag.checkStop = false;
 						this.city1.stopScroll();
 						this.city2.stopScroll();
 						this.ground.stopScroll();
 						this.enemy.enemyTree.body.velocity.x = 0;
-						this.enemy.enemyBody.x = this.enemy.enemyTree.x;
+						this.enemy.enemyBody.body.velocity.x = 0;
 						this.player.flagCoolDown = true;
 					}
 				}
@@ -519,7 +501,7 @@ var Enemy = function (_Phaser$Sprite) {
 
 		_this.enemyTree = _this.game.add.sprite(0, 0, _customConfig2.default.tree.key);
 		_this.enemyTree.anchor.set(0.5, 1);
-		_this.enemyTree.scale.set(0.15, 0.7);
+		_this.enemyTree.scale.set(0.15, 0.3 + _this.game.rnd.realInRange(0, 0.7));
 		_this.game.physics.arcade.enable(_this.enemyTree);
 		//this.enemyTree.body.immovable = true; //穿透
 		_this.enemyTree.body.allowGravity = false;
