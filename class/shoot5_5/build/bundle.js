@@ -516,9 +516,12 @@ var Preload = function (_Phaser$State) {
 		key: "preload",
 		value: function preload() {
 			console.log("preload preload");
-			//this.loaderBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'go');
+			//this.loaderBar = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, customConfig.pics.go.key);
 			//this.loaderBar.anchor.setTo(0.5);
 			//this.load.setPreloadSprite(this.loaderBar);
+			this.textProgress = this.game.add.text(this.game.world.centerX, this.game.world.centerY, "loading ...\n", { fill: "#ff0000", fontSize: 20 });
+			this.load.onFileComplete.add(this.fileComplete, this);
+			this.load.onLoadComplete.add(this.loadComplete, this);
 			console.log("preload preloadSprite");
 
 			this.load.image(_customConfig2.default.pics.cloud.key, _customConfig2.default.pics.cloud.url);
@@ -535,14 +538,25 @@ var Preload = function (_Phaser$State) {
 			this.load.audio(_customConfig2.default.audio.playerShot.key, _customConfig2.default.audio.playerShot.url);
 			this.load.audio(_customConfig2.default.audio.hitGround.key, [_customConfig2.default.audio.hitGround.url, _customConfig2.default.audio.hitGround.url1]);
 			console.log("preload finish preload");
+			console.log(this.game.cache._cache);
 		}
 	}, {
 		key: "create",
 		value: function create() {
 			console.log("preload create");
 			//console.log(this.game.cache._cache);
-			this.state.start("Menu");
+			//this.state.start("Menu");
 			console.log("preload finish create");
+		}
+	}, {
+		key: "fileComplete",
+		value: function fileComplete(progress) {
+			this.textProgress.text = "loading ...\n" + progress + "%";
+		}
+	}, {
+		key: "loadComplete",
+		value: function loadComplete() {
+			this.state.start("Menu");
 		}
 	}]);
 
