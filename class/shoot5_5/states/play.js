@@ -8,12 +8,12 @@ class Play extends Phaser.State{
 		this.game.physics.startSystem(Phaser.Physics.ARCADE);
 		this.game.stage.backgroundColor = '#a8e6ff';
 
-		this.cloud = this.add.tileSprite(0,0,2079,851,'cloud');
+		this.cloud = this.add.tileSprite(0,0,2079*2,851,'cloud');
 	    this.cloud.fixedToCamera = true;
-	    this.city1 = this.add.tileSprite(0,0,1798,359,'city1');
+	    this.city1 = this.add.tileSprite(0,0,1798*2,359,'city1');
 	    this.city1.position.set(0, this.game.world.height-this.city1.height+50);
 	    this.city1.fixedToCamera = true;
-	    this.city2 = this.add.tileSprite(0,0,1353,580,'city2');
+	    this.city2 = this.add.tileSprite(0,0,1353*2,580,'city2');
 	    this.city2.position.set(0, this.game.world.height-this.city2.height+70);
 	    this.city2.fixedToCamera = true;
 	    this.ground = this.add.tileSprite(0, 0, 1000, 32, "ground");
