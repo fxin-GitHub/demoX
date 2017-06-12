@@ -56,7 +56,7 @@ class Player extends Phaser.Sprite{
 			this.playerBullet.x = this.playerBody.x;
 			this.playerBullet.y = this.playerBody.y;
 			if(customConfig.flag.onDown && this.flagCoolDown){
-				this.changeAngle(10*this.flagRotate);
+				this.changeAngle(12*this.flagRotate);
 				if(this.playerBullet.angle <-90){
 					this.flagRotate = -this.flagRotate;
 				}
