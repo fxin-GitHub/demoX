@@ -1,0 +1,60 @@
+<DOCTYPE html>
+<html>
+<head>
+	<title> demo5_8</title>
+	
+	<style>
+      	body,div {
+	        margin: 0 auto;
+	        padding: 0;
+	        text-align: center;
+	        overflow: hidden;
+      	}
+      	canvas {
+        	margin: 0 auto;
+      	}
+      	.game1 {
+	        position: absolute;
+	        margin: 0 auto;
+	        width: 100%;
+	        height: 100%;
+      	}
+    </style>
+    
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<!--	
+    
+    <meta name="full-screen" content="yes" />
+    <meta name="screen-orientation" content="landscape" />
+    <meta name="x5-orientation" content="landscape">
+    <meta name="browsermode" content="application">
+    <meta name="x5-page-mode" content="app">
+
+-->
+<!--
+	<script type="text/javascript">
+	    (function (doc, win) {
+	  		var docEl = doc.documentElement;
+	    	resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize';
+	    	recalc = function () {
+	     		var clientWidth = docEl.clientWidth;
+	      		if (!clientWidth) 
+	      			return;
+	      		docEl.style.fontSize = 20 * (clientWidth / 375) + 'px';
+	    	};
+	  		// Abort if browser does not support addEventListener
+		  	if (!doc.addEventListener) 
+		  		return;
+		  	win.addEventListener(resizeEvt, recalc, false);
+		  	doc.addEventListener('DOMContentLoaded', recalc, false);
+		})(document, window);
+	</script>
+	
+-->
+	<script type="text/javascript" src="./phaser.min.js"></script>
+</head>
+<body>
+<div id="content" class="game"></div>
+<script type="text/javascript" src="./build/bundle.js"></script>
+</body>
+</html>
