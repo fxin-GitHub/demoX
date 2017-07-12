@@ -234,7 +234,7 @@ class Enemy extends Phaser.Sprite{
 		if(customConfig.flag.checkStop){
 			//this.setEnemyTreeX();
 			this.setEnemyLaunchSpeed(this.player.playerBody.x, this.groupEnemy.x+this.enemyTree.x);
-			if(this.groupEnemy.x+this.enemyTree.x < customConfig.common.enemyTreeX+this.game.rnd.between(-30, 50)){
+			if(this.groupEnemy.x+this.enemyTree.x < customConfig.common.enemyTreeX+this.game.rnd.between(-this.game.width*0.05, this.game.width*0.05)){
 				customConfig.flag.canMove = false;
 				customConfig.flag.checkStop = false;
 				this.player.flagCoolDown = true;

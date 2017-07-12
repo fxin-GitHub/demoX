@@ -875,7 +875,7 @@ var Enemy = function (_Phaser$Sprite) {
 			if (_customConfig2.default.flag.checkStop) {
 				//this.setEnemyTreeX();
 				this.setEnemyLaunchSpeed(this.player.playerBody.x, this.groupEnemy.x + this.enemyTree.x);
-				if (this.groupEnemy.x + this.enemyTree.x < _customConfig2.default.common.enemyTreeX + this.game.rnd.between(-30, 50)) {
+				if (this.groupEnemy.x + this.enemyTree.x < _customConfig2.default.common.enemyTreeX + this.game.rnd.between(-this.game.width * 0.05, this.game.width * 0.05)) {
 					_customConfig2.default.flag.canMove = false;
 					_customConfig2.default.flag.checkStop = false;
 					this.player.flagCoolDown = true;
